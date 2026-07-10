@@ -1,0 +1,58 @@
+# -*- coding: utf-8 -*-
+"""dnn 数据子包 — 算法无关, 直接转发 _xgb._dataset。
+
+DNNImputer / load / split 等算法无关工具全部沿用 _xgb._dataset 的实现,
+供 trainers/train_dnn.py 与 engines/_dnn/_model.py 调用,
+与 _lgb / _lr 的 re-export 形式一致。
+"""
+from engines._xgb._dataset import (  # noqa: F401
+    load_table,
+    infer_features,
+    to_xy,
+    to_indices,
+    make_eval_pairs,
+    DatasetSplits,
+    prepare_splits,
+    format_split_md,
+    SplitReport,
+    SplitRatios,
+    SplitCounts,
+    SplitPosRates,
+    DEFAULT_OOT_RATIO,
+    DEFAULT_VAL_RATIO,
+    DEFAULT_RANDOM_SEED,
+    DNNImputer,
+    NullAudit,
+    ImputeReport,
+    DEFAULT_INDICATOR_LOW,
+    DEFAULT_INDICATOR_HIGH,
+    WoeBinner,
+    WoEFeatureMap,
+    WoEReport,
+)
+
+__all__ = [
+    "load_table",
+    "infer_features",
+    "to_xy",
+    "to_indices",
+    "make_eval_pairs",
+    "DatasetSplits",
+    "prepare_splits",
+    "format_split_md",
+    "SplitReport",
+    "SplitRatios",
+    "SplitCounts",
+    "SplitPosRates",
+    "DEFAULT_OOT_RATIO",
+    "DEFAULT_VAL_RATIO",
+    "DEFAULT_RANDOM_SEED",
+    "DNNImputer",
+    "NullAudit",
+    "ImputeReport",
+    "DEFAULT_INDICATOR_LOW",
+    "DEFAULT_INDICATOR_HIGH",
+    "WoeBinner",
+    "WoEFeatureMap",
+    "WoEReport",
+]

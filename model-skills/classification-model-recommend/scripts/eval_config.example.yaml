@@ -1,0 +1,28 @@
+# classification-model-recommend 评估配置模板
+# 用法: 复制为 eval_config.yaml 并填真实表/字段; 或由 fetch_eval_sample.py --session-dir 自动落盘
+# recommend 语境: feature_table = 模型表(score_table), features = [score_col]
+# dt_col 须样本表与模型表同名(否则需建视图别名); _modelevo-shared/fetch_spark.py 用单一 dt_col 同时过滤两表
+
+spark_submit:
+  hdfs_base: null                   # 留空走代码默认 /user/<whoami>/model-recommend
+  # bin/options 留空 = 走 _modelevo-shared/scripts/spark_defaults.yaml 默认档
+
+model:
+  name: <model_id>                      # = model_id, 用作文件名前缀
+  version: v1
+  sample_table: <db>.<sample_table>     # 样本表(提供 label)
+  feature_table: <db>.<score_table>     # 模型表(提供 score)
+  join_keys: [user_no, pday]
+  dt_col: pday                          # 须样本表与模型表同名
+  id_cols: [user_no]
+  fetch_dt: [<YYYYMMDD>, <YYYYMMDD>]    # 须覆盖 train+test+oot 并集
+  where: null                           # 可选客群筛选; 严禁硬编码用户ID/手机号/身份证号
+  label_col: label
+  # 模型分表(score_table)滞后天数: 0=同日JOIN(默认); 1=模型分表 t-1 vs 样本表 t
+  # recommend 语境下: feature_table = score_table, lag=1 即样本 day t LEFT JOIN 模型分 day t-1
+  feature_lag_day: 0
+  features: [score]                     # 模型分列, recommend 语境下 features 就这一个
+  split:
+    train_range: [<YYYYMMDD>, <YYYYMMDD>]
+    test_range:  [<YYYYMMDD>, <YYYYMMDD>]
+    oot_range:   [<YYYYMMDD>, <YYYYMMDD>]

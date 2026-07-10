@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/model-eval-compare.schema.json",
+  "title": "Model Comparison Report",
+  "description": "两模型对比评估报告标准化 Schema",
+  "type": "object",
+  "required": ["_format", "comparison_meta", "auc_comparison"],
+  "properties": {
+    "_format": {
+      "type": "string",
+      "const": "模型评估对比报告"
+    },
+    "_generated_at": { "type": "string", "format": "date-time" },
+    "comparison_meta": {
+      "type": "object",
+      "required": ["model_a", "model_b", "conclusion"],
+      "properties": {
+        "model_a": { "type": "string", "description": "旧模型标识" },
+        "model_b": { "type": "string", "description": "新模型标识" },
+        "model_a_source": { "type": "string" },
+        "model_b_source": { "type": "string" },
+        "conclusion": { "type": "string", "description": "一句话结论" }
+      }
+    },
+    "auc_comparison": {
+      "type": "object",
+      "patternProperties": {
+        ".*": {
+          "type": "object",
+          "properties": {
+            "v2_auc": { "type": ["number", "null"] },
+            "v3_auc": { "type": ["number", "null"] },
+            "delta": { "type": ["number", "null"] },
+            "v2_ks": { "type": ["number", "null"] },
+            "v3_ks": { "type": ["number", "null"] },
+            "count": { "type": "integer" },
+            "label_rate": { "type": "number" }
+          }
+        }
+      }
+    },
+    "bucket_comparison": {
+      "type": "array",
+      "description": "逐桶对比（全量）",
+      "items": {
+        "type": "object",
+        "properties": {
+          "decile": { "type": "integer" },
+          "v2_label_rate": { "type": "number" },
+          "v3_label_rate": { "type": "number" },
+          "v2_req_cnt_t7": { "type": "number" },
+          "v3_req_cnt_t7": { "type": "number" },
+          "v2_loan_cnt_t7": { "type": "number" },
+          "v3_loan_cnt_t7": { "type": "number" }
+        }
+      }
+    },
+    "segment_coverage": {
+      "type": "object",
+      "properties": {
+        "v2_only": { "type": "array", "items": { "type": "string" } },
+        "v3_only": { "type": "array", "items": { "type": "string" } },
+        "shared": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "gaps_identified": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "priority": { "type": "string", "enum": ["P0", "P1", "P2"] },
+          "gap": { "type": "string" }
+        }
+      }
+    },
+    "action_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "priority": { "type": "string", "enum": ["P0", "P1", "P2"] },
+          "action": { "type": "string" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,2 @@
+model_id,业务线,模型中文名,预测目标,正样本定义,模型表,算法类型,训练时间窗,训练客群,状态,原始文档路径,模型报告路径,负责人
+yx_001,示例业务线,示例模型,示例预测目标,示例正样本定义,example_db.example_score_table,xgboost,2025,示例客群,可用,,reports/yx_001_example_model.md,example_owner

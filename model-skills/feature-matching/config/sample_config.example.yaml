@@ -1,0 +1,34 @@
+# feature-matching 取数配置模板
+# 复制为 sample_config.yaml 并填真实值。
+# 安全红线: 严禁在 where/任何字段硬编码用户ID/手机号/身份证号。
+
+# Spark 提交固化参数(yarn 集群)
+spark_submit:
+  hdfs_base: null                   # 留空走代码默认 /user/<whoami>/feature-matching
+  # bin/options 留空 = 走 _modelevo-shared/scripts/spark_defaults.yaml 默认档(yarn + 资源/队列/Python 环境由该 yaml 统一登记)
+  # 如需覆盖, 在此填 bin + options 列表即可
+
+model:
+  name: my_sample                   # 取数任务名(用于落盘目录 / 提交脚本名)
+  version: v1                       # 版本号(用于 HDFS 中间目录区分)
+  sample_table: 库.宽表              # 含 特征+标签 的样本宽表
+  dt_col: pday                      # 日期分区字段(YYYYMMDD 8 位)
+  id_cols: [user_no]                # 去重/落盘用
+  fetch_dt: ["20250101", "20250731"] # 取数时间窗 [起, 止]
+  where: null                       # 可选客群筛选,如 "seg='<your_segment>'"
+
+  # 入模特征列: features 与 feature_list_source 二选一
+  #   - features 非空: 直接用 yaml 列表(优先级最高)
+  #   - features 空 + feature_list_source 非空: 从该文件读(支持 .txt/.csv;csv 取 feature_name 列)
+  #   - 两者都空: 按 feature_table(优先)/business_domain(兜底) 从 model-knowledge/assets/feature-knowledge/feature-knowledge.md 索引自动识别清单
+  features: []                      # 如 [fea_a, fea_b, fea_c]
+  feature_list_source: null         # 相对路径按 model-skills 根解析, 如 "model-knowledge/assets/feature-knowledge/feature-list/<your-feature-list>.csv"; 或绝对路径 /abs/path/my_features.csv
+
+  # 标签字段二选一: label_col 直取, label_expr 表达式
+  label_col: label                  # 标签列名;label_expr 非空时可忽略
+  label_expr: null                  # 如 "(CASE WHEN req_cnt_t7>0 THEN 1 ELSE 0 END)"
+
+  # 特征表滞后天数: 0=同日JOIN(默认, 样本表与特征表同 pday); 1=特征表 t-1 vs 样本表 t
+  # lag=1 时: ON 子句去除 dt_col 等值比较, 改用 a.pday = date_format(date_add(to_date(b.pday,'yyyyMMdd'),1),'yyyyMMdd');
+  # 特征表时间窗自动平移为 [fetch_start-1, fetch_end-1]
+  feature_lag_day: 0

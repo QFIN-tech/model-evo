@@ -1,0 +1,34 @@
+# Spark submission defaults template for model-evo.
+#
+# 说明:
+# - 本文件是开源发布用的占位模板, 用于开源仓库中不携带任何内部集群细节。
+# - spark_defaults.py 加载顺序: 优先读同目录下 spark_defaults.yaml (真实配置, 不入库);
+#   若该文件缺失, 则回退到本模板并抛 RuntimeWarning 提示用户去填值。
+# - 使用者复制本模板另存为 spark_defaults.yaml
+#   并把 <PLACEHOLDER> 替换成自己集群的值即可。
+#
+# 字段:
+#   bin        cluster 上 spark-submit 可执行文件的绝对路径
+#   hdfs_user  用于拼 HDFS 中间目录 (/user/<hdfs_user>/<skill_name>) 的用户名;
+#              当 spark-submit 使用的 Kerberos principal 与 OS 登录用户不一致时,
+#              在这里显式钉死; 留空则回退到 getpass.getuser()。
+#   options    每次 spark-submit 追加的公共参数, 按自己集群资源调整。
+
+bin: <SPARK_SUBMIT_BIN>            # e.g. /usr/local/spark/bin/spark-submit
+
+hdfs_user: <HDFS_USER>             # e.g. your_hdfs_user
+
+options:
+  - --master yarn
+  - --driver-memory 3G
+  - --executor-memory 4G
+  - --num-executors 100
+  - --queue <YARN_QUEUE>
+  - --conf spark.executor.memoryOverhead=2g
+  # Executor Python 环境: 打包 conda env 为 zip 传到 HDFS, 再在此引用。
+  - --conf spark.yarn.dist.archives=<HDFS_PYENV_ZIP>#Python
+  # Driver 端本机 Python 解释器路径。
+  - --conf spark.pyspark.driver.python=<DRIVER_PYTHON>
+  # Executor 端解释器路径 (相对于上面 archive 解压后的目录名 Python/)。
+  - --conf spark.pyspark.python=Python/<PYENV_DIR>/bin/python
+

@@ -1,0 +1,34 @@
+# task-spec 样本拉取配置模板
+# 复制为 sample_config.yaml 并填真实值。
+# 与 feature-matching 配置结构兼容, 但 features 字段语义为"补充字段清单"(不直接入模)。
+# 安全红线: 严禁在 where/任何字段硬编码用户ID/手机号/身份证号。
+
+# Spark 提交固化参数(yarn 集群)
+spark_submit:
+  hdfs_base: null                   # 留空走代码默认 /user/<whoami>/feature-matching
+  # bin/options 留空 = 走 _modelevo-shared/scripts/spark_defaults.yaml 默认档(yarn + 3G/4G×100 + python3.9 + <yarn_queue>)
+
+model:
+  name: draw_willingness              # 取数任务名(用于落盘目录/提交脚本名)
+  version: v1
+  sample_table: your_db.your_sample_table   # 样本表(含 user_no/label/pday + 可选补充字段)
+  dt_col: pday                        # 日期分区字段(YYYYMMDD 8 位)
+  id_cols: [user_no]                  # 去重/落盘用
+  fetch_dt: ["20260410", "20260530"]  # 取数时间窗 [起, 止], 须覆盖 Train+Test+OOT 三档
+  where: null                         # 可选客群筛选, 如 "客群='活跃户'"
+
+  # 取数时锁定 train/test/oot 时间划分(三档落在 fetch_dt 内、时序递增不相交)
+  # 由 config_io.validate_split_ranges 强制校验
+  split:
+    train_range: ["20260410", "20260510"]
+    test_range:  ["20260511", "20260520"]
+    oot_range:   ["20260521", "20260530"]
+
+  # 补充字段清单: 不直接入模, 供后续报告做补充分析
+  # 留空 = 仅拉样本三列(user_no/label/pday)
+  features: []
+  feature_list_source: null
+
+  # 标签字段二选一: label_col 直取, label_expr 表达式
+  label_col: label                    # 样本表中的标签列
+  label_expr: null                    # 如 "(CASE WHEN req_cnt_t7>0 THEN 1 ELSE 0 END)"

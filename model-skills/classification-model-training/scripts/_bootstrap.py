@@ -1,0 +1,18 @@
+# -*- coding: utf-8 -*-
+"""把 model-skills/_modelevo-shared/scripts 注入 sys.path,让本 skill 脚本可直接 import config_io 等公共模块。
+
+_modelevo-shared/ 由 install.sh 从仓库根复制到 model-skills/ 下。
+被 validate_config / run_build / _real_run 等模块 import 一次即可。
+"""
+import sys
+from pathlib import Path
+
+_SKILLS_ROOT = Path(__file__).resolve().parents[2]
+_SHARED_SCRIPTS = _SKILLS_ROOT / "_modelevo-shared" / "scripts"
+if not _SHARED_SCRIPTS.is_dir():
+    raise ImportError(
+        "缺少公共代码目录: %s。请在仓库根目录运行 `bash install.sh` 把 _modelevo-shared/ "
+        "复制到 model-skills/ 下。" % _SHARED_SCRIPTS
+    )
+if str(_SHARED_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(_SHARED_SCRIPTS))

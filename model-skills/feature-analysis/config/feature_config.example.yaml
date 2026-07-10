@@ -1,0 +1,37 @@
+# feature-analysis 配置模板
+# 复制为 feature_config.yaml 并填真实值。
+# 安全红线: 严禁在任何字段硬编码用户ID/手机号/身份证号。
+#
+# 本 skill 接收 sample.parquet (由 feature-matching 产出, 或用户指定任意路径),
+# 按 model.split 内部切分 train/test/oot 三档, 落 output_dir/.cache/splits/ 后算 IV/PSI/统计。
+# 切分逻辑收口在本 skill, 上游 feature-matching 不切三档。
+
+model:
+  name: my_analysis           # 本次分析名(用于报告标题和落盘目录)
+  # ⚠️ local_file 模式必填这两行, 否则 validate_common 按默认 spark 强索 sample_table/fetch_dt 报错:
+  #   mode: local_file
+  #   sample_table: local_file
+  mode: spark                 # 取数模式: spark(默认) | local_file(本地 parquet, 跳过 spark 取数)
+  sample_table: your_db.xxx  # spark 模式必填(库.表); local_file 模式填 local_file 占位
+  label_col: label            # 标签字段(0/1, IV/AUC 计算用; sample.parquet 中的列名)
+  dt_col: pday                # 可选, 默认 pday; 日期分区字段(YYYYMMDD 8位; 用于 model.split 区间切分)
+  features: []                # 待分析特征清单(三选一: 一、直接填列表 二、填 feature_list_source 指向文件 三、CLI --feature_list_source)
+  feature_list_source: null   # 可选, 特征清单文件(.txt 按行 / .csv 取 feature_name 列); 相对路径先按本 yaml 所在目录解析, 再按 model-skills 根解析
+
+  # split 必填: 内部切分, 必须配 train/test/oot_range 三档 pday 区间。
+  # 校验规则 (与 model_training / feature-matching 共用 config_io.validate_split_ranges):
+  #   - 三档齐全 (train/test/oot_range 缺一报错)
+  #   - 每档 [起, 止] 为 8 位 YYYYMMDD 且起 ≤ 止
+  #   - 三档时序递增 train<test<oot (允许相邻, 间隔≥1天)
+  #   - 三档并集 ⊆ fetch_dt (local_file 模式 fetch_dt 可空跳过本条)
+  split:
+    train_range: ["20260312", "20260430"]
+    test_range:  ["20260501", "20260516"]
+    oot_range:   ["20260517", "20260524"]
+
+analysis:
+  iv:
+    n_bins: 10                # 等频分箱数
+  psi:
+    n_bins: 10                # 等频分箱数(按训练段边界)
+    warn_threshold: 0.10      # > 阈值标 [PSI_WARN]

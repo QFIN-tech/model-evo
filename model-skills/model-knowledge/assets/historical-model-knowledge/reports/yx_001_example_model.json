@@ -1,0 +1,269 @@
+{
+  "kb_version": "1.0.0",
+  "source_file": "示例模型_v3.xlsx",
+  "generated_at": "2026-06-09T14:59:24.695044",
+  "model_meta": {
+    "name": "示例模型",
+    "name_en": null,
+    "version": "v3",
+    "model_type": "xgboost",
+    "target_definition": "客户是否愿意接受推送(Y=1)",
+    "target_type": "binary_classification",
+    "owner_team": "example_owner",
+    "created_date": "YYYY-MM-DD",
+    "eval_date": "2026-05-21",
+    "status": "candidate",
+    "description": "V3候选模型，V2已作废。核心改进：新增风险特征。AUC: 非活跃户0.9，活跃户0.7839",
+    "parent_version": "v2(已作废)"
+  },
+  "data_profile": {
+    "observation_window": "2026-01-30 ~ 2026-05-21",
+    "feature_count": 0,
+    "data_splits": [
+      {
+        "segment": "全量",
+        "split_name": "非活跃",
+        "time_range": "",
+        "sample_count": null,
+        "label_rate": null,
+        "model_score_mean": null,
+        "auc": 0.9,
+        "ks": null
+      },
+      {
+        "segment": "全量",
+        "split_name": "活跃户",
+        "time_range": "",
+        "sample_count": null,
+        "label_rate": null,
+        "model_score_mean": null,
+        "auc": 0.7839,
+        "ks": null
+      }
+    ]
+  },
+  "performance": {
+    "overall_metrics": {
+      "非活跃": {
+        "auc": 0.9
+      },
+      "活跃户": {
+        "auc": 0.7839
+      }
+    },
+    "score_buckets": [],
+    "feature_importance": []
+  },
+  "business_metrics": [
+    {
+      "metric_name": "user_cnt",
+      "metric_group": "20260130",
+      "model_version": "v3",
+      "value": 20260130.0,
+      "value_unit": "",
+      "observation_date": ""
+    },
+    {
+      "metric_name": "T7发起率",
+      "metric_group": "20260130",
+      "model_version": "v3",
+      "value": 1633133.0,
+      "value_unit": "",
+      "observation_date": ""
+    },
+    {
+      "metric_name": "T7发起金额",
+      "metric_group": "20260130",
+      "model_version": "v3",
+      "value": 2.395460269200991,
+      "value_unit": "",
+      "observation_date": ""
+    },
+    {
+      "metric_name": "T7动支率",
+      "metric_group": "20260130",
+      "model_version": "v3",
+      "value": 39030.190491,
+      "value_unit": "",
+      "observation_date": ""
+    },
+    {
+      "metric_name": "T7动支金额",
+      "metric_group": "20260130",
+      "model_version": "v3",
+      "value": 1.087016477092521,
+      "value_unit": "",
+      "observation_date": ""
+    },
+    {
+      "metric_name": "T7人头批核率",
+      "metric_group": "20260130",
+      "model_version": "v3",
+      "value": 15294.742935,
+      "value_unit": "",
+      "observation_date": ""
+    },
+    {
+      "metric_name": "T7金额批核率",
+      "metric_group": "20260130",
+      "model_version": "v3",
+      "value": 4.218647865914276,
+      "value_unit": "",
+      "observation_date": ""
+    },
+    {
+      "metric_name": "user_cnt",
+      "metric_group": "10",
+      "model_version": "v3",
+      "value": 10.0,
+      "value_unit": "",
+      "observation_date": ""
+    },
+    {
+      "metric_name": "T7发起率",
+      "metric_group": "10",
+      "model_version": "v3",
+      "value": 163313.0,
+      "value_unit": "",
+      "observation_date": ""
+    },
+    {
+      "metric_name": "T7发起金额",
+      "metric_group": "10",
+      "model_version": "v3",
+      "value": 0.663976535854463,
+      "value_unit": "",
+      "observation_date": ""
+    },
+    {
+      "metric_name": "T7动支率",
+      "metric_group": "10",
+      "model_version": "v3",
+      "value": 12635.133149,
+      "value_unit": "",
+      "observation_date": ""
+    },
+    {
+      "metric_name": "T7动支金额",
+      "metric_group": "10",
+      "model_version": "v3",
+      "value": 0.360938810749909,
+      "value_unit": "",
+      "observation_date": ""
+    },
+    {
+      "metric_name": "T7人头批核率",
+      "metric_group": "10",
+      "model_version": "v3",
+      "value": 3452.196702,
+      "value_unit": "",
+      "observation_date": ""
+    },
+    {
+      "metric_name": "T7金额批核率",
+      "metric_group": "10",
+      "model_version": "v3",
+      "value": 0.543601755874432,
+      "value_unit": "",
+      "observation_date": ""
+    }
+  ],
+  "comparison": {
+    "model_a": "V2(作废)→V3",
+    "model_b": "B",
+    "diff_metrics": [
+      {
+        "metric_path": "V2(作废)→V3.10.发起率",
+        "value_a": 0.59615584797291,
+        "value_b": 0.663976535854463,
+        "diff_abs": 0.06782068788155304,
+        "diff_pct": null,
+        "direction": "improved"
+      },
+      {
+        "metric_path": "V2(作废)→V3.10.人头批核率",
+        "value_a": 0.523705834018077,
+        "value_b": 0.543601755874432,
+        "diff_abs": 0.01989592185635503,
+        "diff_pct": null,
+        "direction": "improved"
+      }
+    ],
+    "winner": "",
+    "summary": ""
+  },
+  "hyperparameters": {
+    "objective": {
+      "value": "binary:logistic",
+      "description": "",
+      "source": "用户提供"
+    },
+    "learning_rate": {
+      "value": "0.08",
+      "description": "",
+      "source": "用户提供"
+    },
+    "booster": {
+      "value": "gbtree",
+      "description": "",
+      "source": "用户提供"
+    },
+    "eval_metric": {
+      "value": "auc",
+      "description": "",
+      "source": "用户提供"
+    },
+    "tree_method": {
+      "value": "auto",
+      "description": "",
+      "source": "用户提供"
+    },
+    "subsample": {
+      "value": "0.8",
+      "description": "",
+      "source": "用户提供"
+    },
+    "colsample_bytree": {
+      "value": "0.8",
+      "description": "",
+      "source": "用户提供"
+    },
+    "min_child_weight": {
+      "value": "1",
+      "description": "",
+      "source": "用户提供"
+    },
+    "gamma": {
+      "value": "0",
+      "description": "",
+      "source": "用户提供"
+    },
+    "reg_alpha": {
+      "value": "0",
+      "description": "",
+      "source": "用户提供"
+    },
+    "reg_lambda": {
+      "value": "1",
+      "description": "",
+      "source": "用户提供"
+    },
+    "random_state": {
+      "value": "0",
+      "description": "",
+      "source": "用户提供"
+    }
+  },
+  "customer_segments": [
+    {
+      "dimension": "活跃口径",
+      "segment": "活跃户",
+      "description": "在贷户"
+    },
+    {
+      "dimension": "活跃口径",
+      "segment": "非活跃",
+      "description": "睡眠户"
+    }
+  ]
+}

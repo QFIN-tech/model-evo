@@ -1,0 +1,76 @@
+# ===== 实验产物 / session 产物(每次运行重新生成,不入库) =====
+# session 目录: 每次跑 feature-matching / feature-analysis / model-training 等产出的样本/模型/报告
+# runs/ 下所有产出数据都不入库, 仅保留 runs/.gitkeep 占位
+runs/*
+!runs/.gitkeep
+
+# 自动生成的 spark-submit wrapper 脚本(每次取数重新生成)
+feature-matching/scripts/generated/*
+!feature-matching/scripts/generated/.gitkeep
+
+# classification-model-recommend 评估脚本与配置产物(沿用子目录 .gitignore)
+classification-model-recommend/tools/generated/*
+!classification-model-recommend/tools/generated/.gitkeep
+
+# ===== 模型 / 数据文件(大文件, 不入库) =====
+*.parquet
+*.parquet.bak
+*.pkl
+*.bst
+*.bin
+*.h5
+*.onnx
+*.pmml
+*.xlsx
+*.xls
+
+# 临时数据文件
+*.csv.bak
+*.tmp
+
+# ===== Python 缓存 =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# ===== Jupyter =====
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# ===== 虚拟环境 =====
+.venv/
+venv/
+env/
+ENV/
+
+# ===== IDE / 编辑器 =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ===== 日志 =====
+*.log
+logs/
+*.pid
+
+# ===== 本地敏感配置(含真实表名/路径,按需本地维护) =====
+# 各 skill 的 example/模板入库, 实际 yaml 配置不入库
+feature-analysis/config/feature_config.yaml
+classification-model-training/config/train_config.yaml
+classification-model-tuning/config/tune_config.yaml
+feature-matching/config/sample_config.yaml
+
+# task-spec 自动生成的 spark-submit wrapper 脚本不入库
+classification-model-task-spec/scripts/generated/*
+!classification-model-task-spec/scripts/generated/.gitkeep

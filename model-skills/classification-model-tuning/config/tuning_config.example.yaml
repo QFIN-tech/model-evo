@@ -1,0 +1,10 @@
+# model-tuning 默认配置(可选)
+# 通常 baseline run 的 config.json 已经记录了所有训练所需信息;
+# 这里只放调优本身的策略选项。CLI 标志优先于本文件。
+
+tuning:
+  method: rule              # rule | optuna; 默认规则诊断 + 推荐超参
+  n_trials: 30              # 仅 method=optuna 用
+  search_space_ratio: 0.30  # Optuna 在 baseline 周围 ±30% 内搜索连续超参
+  early_stop_on_well_fit: true   # 诊断为 well_fit 时直接退出, 不重训
+  auto_apply: false         # true 跳过交互式确认 (CLI --auto-apply 同效)
