@@ -1,6 +1,6 @@
 # Model Evo
 
-**ModelEvo**: Business-Aligned Model Evolution Framework — 一套以业务为导向、由 Skill 编排的业务建模演化框架。
+**ModelEvo**: Business-Aligned Model Evolution Framework — 一套以业务为导向、基于 Skill 编排的业务建模演化框架。
 
 
 **核心设计理念**: 用 Coding Agent 做调度，用 Skill 做能力组件，用模型知识库做经验沉淀，用标准化产物目录做实验管理，用决策点做人机协同。利用大模型和 Agent 能力把传统依赖专家个人经验的建模流程，升级为可编排、可复用、可追溯、可进化的智能建模体系。
@@ -72,7 +72,7 @@ model-evo/
 │   └── tests/
 │
 ├── examples/                                # 示例（公开数据集切片，可直接跑通全流程）
-│   ├── model-classification-example1/       # 分类示例（Home Credit 公开数据集切片）
+│   ├── model-classification-example1/       # 分类示例（Default of Credit Card Clients 公开数据集切片）
 │   └── model-uplift-example1/               # uplift 示例（Criteo Uplift 公开数据集切片）
 │
 └── feature-mining-skills/                   # 特征挖掘 skill（占坑，早期阶段，本次不发布）
@@ -205,7 +205,7 @@ ModelEvo 以 `model-task-routing` 为总入口。直接用自然语言描述建�
 
 **步骤**：
 
-1. 准备样本（参考 [`examples/model-classification-example1/`](examples/model-classification-example1/)，Home Credit 公开数据集切片）。
+1. 准备样本（参考 [`examples/model-classification-example1/`](examples/model-classification-example1/)，Default of Credit Card Clients 公开数据集切片）。
 2. 在对话中输入：
 
       ```
