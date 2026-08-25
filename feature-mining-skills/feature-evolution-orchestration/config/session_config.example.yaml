@@ -1,0 +1,59 @@
+# feature-evolution 配置模板
+# 复制为 <session_dir>/session_config.yaml 填真实值(放 session 内, 不要放 skill 的 config/ 目录).
+# 安全红线: 严禁硬编码用户ID/手机号/身份证号.
+
+name: credit_default_fe        # 任务/模型名(报告标题与 session 命名后缀), 全小写+下划线
+
+# ---- 场景标识 (必填) ----
+# cold_start:  从零训 baseline XGB + 逐轮加特征(低垂果实多, 默认 max_rounds=15)
+# saturated:   给已有训练好的强模型加特征(填 base_model_score_col, 默认 max_rounds=30-50,
+#              前置诊断更严, 原料黑名单更激进, G3 对照=champion 全列, g4_g5_metric 建议 pr_auc)
+scenario: cold_start
+
+# ---- 样本输入契约(必填) ----
+sample:
+  path: /abs/path/sample.csv   # .csv 或 .parquet; csv 自动 utf-8-sig 去 BOM
+  label_col: label             # 0/1 标签(仅二分类)
+  dt_col: dt                   # 时间列(8位YYYYMMDD或可解析日期), 时序切分依据
+  id_cols: [user_id]           # 主键(不入模, join/落盘用)
+  feature_metadata: null       # 可选: csv 路径, 前两列(feature, description)
+  text_cols: []                # 可选: 文本列(semantic-feature 用, 不进 baseline)
+  base_model_score_col: null   # saturated 场景必填: 已有强模型打分列. 填了 baseline=该列,
+                               # 融合判定=[既有分+候选] 固定XGB OOT 须超既有分单独.
+                               # 该列对候选代码不可见(防抄近道)
+  exclude_cols: []             # 可选: 显式排除列(如已知泄漏列)
+
+# ---- 时序切分(二选一, 禁止随机切分) ----
+split:
+  ratio: [0.7, 0.2, 0.1]       # 按 dt_col 升序后按行数比例切 train/test/oot
+  # ranges:                    # 或显式区间(8位YYYYMMDD, 起<=止, 三档时序递增允许相邻)
+  #   train: [20260601, 20260620]
+  #   test:  [20260621, 20260626]
+  #   oot:   [20260627, 20260630]
+
+# ---- baseline(固定超参, 进化比特征增益, 调参走 tuning) ----
+baseline:
+  algo: xgb
+
+# ---- 进化参数 ----
+evolution:
+  max_rounds: 15               # cold_start 缺省 15; saturated 建议 30-50
+  candidates_per_round: 4      # 每轮 K(配额: >=1 explore + >=1 exploit)
+  no_accept_rounds: 3          # 连续 N 轮无接受终止. cold_start 3; saturated 5
+  time_budget_hours: null
+  target_oot_gain: null
+  batch_size: 100
+  max_case_chars: 80000
+  param_tuning: true           # 候选声明 PARAM_BOUNDS 时 train 档确定性搜常数固化回代码
+  train_sample_cap: null       # 大数据量降本: G4/G5 多seed 在 cap 行子样本上训
+  n_seeds: 3                   # 多seed 子样本数(>1 启用多seed降噪; 1=回退单点)
+  run_stage0_probe: true       # 开跑前跑 Stage0 可挖性诊断(saturated 强烈建议)
+
+# ---- 关卡阈值(缺省见 evaluation/config/gate_config.example.yaml; 写了则覆盖) ----
+# gates:
+#   g2_min_auc: 0.5             # 缺省 0.5; 放行"单变量弱、组合强"特征, 真噪声由 G4/G5 挡
+#   g3_max_abs_corr: 0.9          # saturated 场景(严苛: 对照 champion 全列)
+#   g3_max_abs_corr_cold: 0.95    # cold_start 场景(宽松: 对照本轮已接受)
+#   g4_g5_metric: pr_auc          # "auc" 或 "pr_auc"; 饱和+正样本率低建议 pr_auc
+#   n_seeds: 3
+#   g4_g5_ci_lower_bound: 0.0     # 多seed bootstrap CI 下界门槛

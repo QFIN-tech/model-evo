@@ -1,0 +1,30 @@
+# semantic-feature 配置模板(semantic-feature: Text -> Embedding -> 监督 Head -> Semantic Feature)
+# 复制为 <session_dir>/semantic_config.yaml 并按需修改; 也可直接写进 session_config.yaml 的
+# semantic 段(--config 文件优先)。不配置时: hash 后端 + 样本契约的每个 text_cols 一源 +
+# 双 head(lr_score + pca_lowdim)。
+
+semantic:
+  # ---- Encoder(三选一) ----
+  encoder:
+    backend: hash                  # hash | sentence_transformers | api
+    model: null                    # sentence_transformers/api 的模型名
+    dim: 256                       # hash 后端向量维度
+    batch_size: 32                 # sentence_transformers/api 批大小
+    api:                           # backend=api 时生效(OpenAI 兼容 /embeddings)
+      base_url: https://your-embedding-host/v1
+      model: bge-m3                # 如 bge-m3 / text-embedding-v3 / qwen-embedding
+      api_key_env: SEMANTIC_API_KEY  # key 只从环境变量读, 严禁写进本文件
+      timeout_s: 60
+
+  # ---- 文本源(缺省: 每个 sample.text_cols 一源) ----
+  sources:
+    - name: txt                    # 源名(决定输出列名前缀 sem_{name}_*)
+      text_cols: [remark]          # 多列会拼接为一个文档
+      max_chars: 2000              # 超长截断
+
+  # ---- 监督 Head 变体 ----
+  heads: [lr_score, pca_lowdim]    # lr_score=监督打分; pca_lowdim=低维表征
+  pca_dim: 8                       # pca_lowdim 输出维度
+  lr_params:                       # 传给 LogisticRegression 的参数
+    C: 1.0
+    max_iter: 1000
