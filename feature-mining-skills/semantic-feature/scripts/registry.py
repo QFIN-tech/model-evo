@@ -5,12 +5,14 @@ registry.json 结构:
   {
     "schema_version": 1,
     "produced_by": "feature-mining-skills/semantic-feature",
-    "id_cols": [...],                       # join 键(与样本契约一致)
+    "id_cols": [...],                       # join 键(与样本契约一致, 已去重唯一)
     "encoder": {...},                       # encoder 配置快照(复现用)
     "items": [
       {"name": "sem_txt_lr_score", "source_text_cols": ["txt"], "head": "lr_score",
-       "output": {"type": "score", "columns": ["sem_txt_score"]},
-       "metrics": {"sem_txt_score": {"train_auc": ..., "test_auc": ..., "oot_auc": ...}},
+       "mode": "full", "output": {"type": "score", "columns": ["sem_txt_score", "sem_txt_present"]},
+       "metrics": {"sem_txt_score": {"train_auc": ..., "train_pr_auc": ..., "test_auc": ..., ...}},
+       "diagnostics": {"conditional_auc_by_baseline_decile": [...], "spearman_vs_base_score": ...},
+       "cost": {"encode_seconds": ..., "coverage": ...},
        "artifact": "sem_txt_lr_score/head.json"}
     ]
   }

@@ -124,6 +124,25 @@ task-spec ─▶ model-recommend ─▶ [是否建模?]
 | `uplift-model-result-comparison` | 多模型/版本确定性比较 → 推荐模型 |
 | `uplift-model-reporting` | 最终建模报告（MD + HTML + facts + manifest） |
 
+## 特征挖掘智能化原理（feature-mining-skills）
+
+`feature-mining-skills/` 由两个互补的子项目组成：
+
+### Project A｜Feature Evolution（特征进化）
+
+- **要解决的问题**：企业已拥有大量结构化特征时，围绕当前建模任务，持续发现更有价值的已有特征、特征之间新的组合与交互，以及新的统计 / 非线性 / 业务计算逻辑的 Feature Code。核心不是再造一个 Feature Factory，而是让大模型持续探索新的特征表达方式，并用真实模型效果判断哪些特征有价值。
+- **怎么做**：参考代码进化（Evolutionary Search）的思路形成闭环——**特征生成/组合 → 模型训练 → 效果评价 → Feedback → 下一轮进化**。LLM 负责提出 Feature Hypothesis、Feature Combination 或 Feature Code；确定性的训练与评价系统负责客观判定 AUC / KS / Lift / OOT 是否真正提升。有效方案被保留，并在此基础上继续演进。
+- **参考方法**：AlphaEvolve——LLM 生成候选代码 + 自动 Evaluator 客观评分 + Evolutionary Search 持续演进。ModelEvo 主要借鉴其 **Generate → Evaluate → Feedback → Evolve** 闭环，以及 Candidate Diversity、Exploration / Exploitation 等思想，不复制其完整系统实现。
+
+### Project B｜Semantic Feature（语义特征挖掘）
+
+- **要解决的问题**：传统业务模型主要依赖结构化变量，但大量业务信息存在于对话文本、客户描述、工单、营销交互、催收记录等非结构化文本中，需要把它们转化成传统模型可以直接使用的特征。
+- **怎么做**：一条简单、通用的技术路线——**Text → Embedding Encoder → Supervised Head → Semantic Feature**。Encoder 可用 BGE / Qwen Embedding 等可替换模型；基于业务 Label 训练监督 Head，产出 Semantic Score 或低维语义表征；不同文本窗口、Encoder、Head、聚合方式和输出形式构成不同变体。
+
+### A 与 B 的关系
+
+**B 负责创造新的语义特征能力，其产出的 Semantic Feature 作为 A 的候选输入；A 负责在所有特征中持续搜索、组合和演进。** 最终统一以能否带来主模型**稳定 OOT 增益**作为评价标准。
+
 ## 共享 skill / 资产
 
 | Skill / 资产 | 说明 |

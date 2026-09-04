@@ -43,7 +43,7 @@ feature-mining-skills/
 |---|---|---|
 | `feature-evolution-orchestration` | 特征进化编排：场景确认 -> session 初始化（含 Stage 0 可挖性诊断）-> 进化循环（轮简报 -> LLM 提候选 -> 评估 -> 结算 -> 反馈）-> 收口导出 | 特征进化、特征挖掘、帮我找特征、提升模型效果的特征 |
 | `feature-evolution-evaluation` | 确定性评估核心：G1~G6 关卡（AST 白名单安全执行 / 单变量质量 / 冗余 / 多seed增益 / 轮级融合）、台账、反馈生成、交付包导出，零 LLM | 评估这些候选特征、结算这一轮、导出接受的特征 |
-| `semantic-feature` | 语义特征挖掘：文本 -> Embedding（hash / 本地模型 / API 可替换）-> 监督 Head -> 注册为特征进化候选原料 | 文本特征、语义特征、把文本变成特征、embedding 特征 |
+| `semantic-feature` | 语义特征挖掘：文本 -> Embedding（hash / 本地模型 / API 可替换；full / list / chunk 三种文本模式）-> 监督 Head（OOF LR / GBDT / PCA / 分箱 / 聚类）-> 注册为特征进化候选原料 | 文本特征、语义特征、把文本变成特征、embedding 特征 |
 
 ## 核心流程
 
@@ -77,7 +77,7 @@ export_features（交付包: 特征代码 + 特征值 + 融合模型）+ finaliz
 
 | 依赖 | 用途 |
 |---|---|
-| `pip install sentence-transformers` | semantic-feature 的本地 Embedding 模型后端（如 `BAAI/bge-small-zh-v1.5`）；不装可用 hash 后端（无外部依赖） |
+| `pip install sentence-transformers` | semantic-feature 的本地 Embedding 模型后端（如 `BAAI/bge-m3`，GPU 上可开 fp16）；不装可用 hash 后端（无外部依赖） |
 | OpenAI 兼容 `/embeddings` 端点 | semantic-feature 的 api 后端（key 只从环境变量读，严禁写进配置） |
 
 ### 上下游数据前置

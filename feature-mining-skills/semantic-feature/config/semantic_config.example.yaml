@@ -7,24 +7,42 @@ semantic:
   # ---- Encoder(三选一) ----
   encoder:
     backend: hash                  # hash | sentence_transformers | api
-    model: null                    # sentence_transformers/api 的模型名
+    model: null                    # sentence_transformers 的本地模型路径或模型名(如 BAAI/bge-m3)
     dim: 256                       # hash 后端向量维度
-    batch_size: 32                 # sentence_transformers/api 批大小
+    batch_size: 32                 # sentence_transformers/api 批大小(真模型建议 256)
+    fp16: false                    # GPU 上开 fp16, 吞吐 +~50%(需验收指标无漂移)
+    query_prefix: ""               # 检索式变体用的指令前缀, 缺省空
     api:                           # backend=api 时生效(OpenAI 兼容 /embeddings)
       base_url: https://your-embedding-host/v1
       model: bge-m3                # 如 bge-m3 / text-embedding-v3 / qwen-embedding
       api_key_env: SEMANTIC_API_KEY  # key 只从环境变量读, 严禁写进本文件
       timeout_s: 60
+      retries: 2
 
   # ---- 文本源(缺省: 每个 sample.text_cols 一源) ----
   sources:
     - name: txt                    # 源名(决定输出列名前缀 sem_{name}_*)
-      text_cols: [remark]          # 多列会拼接为一个文档
-      max_chars: 2000              # 超长截断
+      text_cols: [remark]          # 多列缺省拼接为一个文档
+      max_chars: 2000              # full 模式头部截断; chunk 模式为窗口长
+                                   # 注意: 长文本(>=500字符)编码吞吐约为短文本的 1/3, 截短可显著提速
+      mode: full                   # full=整行 | list=条目级+聚合(App/联系人等分隔列表) | chunk=分窗池化
+      agg: tfidf                   # list 模式聚合: mean | sum | tfidf
+      combine: concat              # 多列组合: concat=拼一文档 | separate=各列独立成源
 
   # ---- 监督 Head 变体 ----
-  heads: [lr_score, pca_lowdim]    # lr_score=监督打分; pca_lowdim=低维表征
+  heads: [lr_score, pca_lowdim]    # 可选: lr_score/gbdt_head/pca_lowdim/quantile_bins/cluster_centroid
+  oof_folds: 5                     # 监督 head 的 train 段 OOF 折数(0=关; 关掉会有 in-sample 虚高)
   pca_dim: 8                       # pca_lowdim 输出维度
-  lr_params:                       # 传给 LogisticRegression 的参数
+  quantile_bins: 8                 # quantile_bins 箱数
+  n_clusters: 12                   # cluster_centroid 簇数
+  lr_params:                       # 传给 LogisticRegression(极低正样本率建议 class_weight: balanced)
     C: 1.0
     max_iter: 1000
+    class_weight: null
+  gbdt_params:                     # gbdt_head 的 XGB 超参(缺省浅树)
+    n_estimators: 60
+    max_depth: 3
+    learning_rate: 0.1
+
+  # ---- join 键防御 ----
+  dedup: error                     # id_cols 重复时: error=退出码2报错(缺省) | first=自动去重
