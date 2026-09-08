@@ -8,7 +8,7 @@
 
 
 ##  🔥 News
-- 【**2026. 08. 25**】发布**特征挖掘智能化**（`feature-mining-skills/`）第一版，包含**特征进化**（`feature-evolution-orchestration` / `feature-evolution-evaluation`，LLM 提假设 + 确定性系统判 G1~G6 关卡的 AlphaEvolve 式闭环，支持冷启动 / 饱和模型两种场景）与**语义特征挖掘**（`semantic-feature`，文本 -> Embedding -> 监督 Head -> 注册为候选原料）。
+- 【**2026. 09. 07**】发布**特征挖掘智能化**（`feature-mining-skills/`）第一版，包含**特征进化**（`feature-evolution-orchestration` / `feature-evolution-evaluation`，LLM 提假设 + 确定性系统判 G1~G6 关卡的 AlphaEvolve 式闭环，支持冷启动 / 饱和模型两种场景）与**语义特征挖掘**（`semantic-feature`，文本 -> Embedding -> 监督 Head -> 注册为候选原料）。
 - 【**2026. 07. 10**】发布V1.0版本，包含**建模智能化**（`model-skills/`），包含业务建模全流程 Skill 集合，覆盖从需求采集、样本准备、特征工程、模型开发、评估对比到归档沉淀的完整链路，支持 **classification（分类）** 与 **uplift（增益/因果）** 两种建模方式。
 
 > **Status:** Public release (V1.0).<br>
@@ -192,6 +192,7 @@ cd model-evo
 export SKILL_ROOT=~/.claude/skills
 mkdir -p ${SKILL_ROOT}
 cp -r  model-skills/* ${SKILL_ROOT}
+cp -r  feature-mining-skills/* ${SKILL_ROOT}
 cp -r  _modelevo-shared/ ${SKILL_ROOT}
 
 # 第三步（可选）：如果要走spark模式，需要配置。

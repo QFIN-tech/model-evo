@@ -104,12 +104,12 @@ python <eval>/scripts/champion_residual.py --session-dir <session>
 ```bash
 python <orch>/scripts/build_round_brief.py --session-dir <session> --round <N>
 ```
-简报含 **`material-whitelist.md`**(低冗余有信号原料)+ `material-blacklist.md`(高冗余原料,勿用)+ champion 残差分析(见下)。
+简报含白名单/黑名单摘要(指向 `profile/material_whitelist.txt` / `profile/material_blacklist.txt`)+ champion 残差分析(见下)。
 
 **Step 2 提出候选**(LLM 职责)。必须先读:
 - `evolution/rounds/rXXX/round-brief.md`
-- **`profile/material-whitelist.md`**(候选原料**只能从这里选**,杜绝赌中高冗余)
-- `profile/material-blacklist.md`(近几轮已证实冗余的原料族,整族勿用)
+- **`profile/material_whitelist.txt`**(候选原料**只能从这里选**,杜绝赌中高冗余)
+- `profile/material_blacklist.txt`(近几轮已证实冗余的原料族,整族勿用)
 - `evolution/rounds/rXXX/case-batch.json`(均衡采样,看正负差异)
 - `references/operator-catalog.md`
 - `profile/data-desc.md`

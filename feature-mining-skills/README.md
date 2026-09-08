@@ -25,8 +25,7 @@ feature-mining-skills/
 ├── feature-evolution-evaluation/       # 确定性评估核心（无 LLM，唯一判定权威）
 │   ├── SKILL.md
 │   ├── config/gate_config.example.yaml
-│   ├── scripts/                        # probe_roi / evaluate_round / commit_round / evo_core 等
-│   └── tests/                          # （占位，待补）
+│   └── scripts/                        # probe_roi / evaluate_round / commit_round / evo_core 等
 │
 └── semantic-feature/                   # 语义特征挖掘（文本 -> Embedding -> 监督 Head -> 注册）
     ├── SKILL.md
@@ -68,10 +67,31 @@ feature-evolution-orchestration
 export_features（交付包: 特征代码 + 特征值 + 融合模型）+ finalize_session（总报告）
 ```
 
+## 实验效果
+
+在 2 个内部风控任务与 6 个开源任务上验证（指标为 AUC；`+ Semantic Search` 表示在其基础上叠加 `semantic-feature` 产生的特征，`+ Feature Evolution` 表示再叠加特征进化接受的特征）：
+
+| 任务 | 描述 | 数据量 | 数值特征数 | 文本字段 | Baseline (AUC) | + Semantic Search | + Feature Evolution |
+|---|---|---|---|---|---|---|---|
+| **内部1**：用户app | 用户已安装 app 对某风控 label 的提升 | 100万 | 28 | 用户已安装app | 0.6611 | 0.6636（+0.0025，9特征） | 0.6691（+0.008，8特征） |
+| **内部2**：反备注 | 用户联系人备注名对某风控 label 的提升 | 10万 | 32 | 用户联系人备注名 | 0.6297 | 0.6601（+0.0304，9特征） | 0.6651（+0.0354，5特征） |
+| **开源1**：Wine Reviews（`winemag-data/`） | 酒评数据上对评分 label（points ≥ 90 为正）的提升 | 129971 | 19 | description（酒评正文） | 0.8170 | 0.8529（+0.0359，9特征） | 0.8605（+0.0435，5特征） |
+| **开源2**：Fake Jobs（`fakejob-data/`） | 职位帖四文本字段对欺诈标签（fraudulent）的提升 | 17880 | 28 | description / requirements / company_profile / benefits | 0.8929 | 0.9452（+0.0523，45特征） | 0.9544（+0.0615，4特征） |
+| **开源3**：Kickstarter（`kickstarter-data/`） | 项目名（name）对筹资成功（successful/failed）预测的提升 | 331675 | 15 | name（项目名） | 0.7011 | 0.7153（+0.0142，9特征） | 0.7190（+0.0179，3特征） |
+| **开源4**：Hotel Reviews（`hotel-reviews-data/`） | 用户评论（差评/好评部分）对评论高分 label（Reviewer_Score ≥ 8.8）的提升 | 515738 | 33 | Negative_Review、Positive_Review | 0.8328 | 0.8848（+0.0520，27特征） | 0.8936（+0.0608，4特征） |
+| **开源5**：Clothing Reviews（`womens-clothing-reviews/`） | 女装电商评论双文本字段对推荐标签（Recommended IND）的提升 | 23486 | 13 | review_text（评论正文）/ title（评论标题） | 0.5847 | 0.9081（+0.3234，18特征） | 0.9759（+0.3912，3特征） |
+| **开源6**：Fine Food（`amazon-fine-food/`） | 评论双文本字段对正评标签（Score ≥ 4）的提升 | 568454 | 8 | Text（评论正文）/ Summary（一句话摘要） | 0.6599 | 0.9104（+0.2505，27特征） | 0.9201（+0.2602，8特征） |
+
+几点观察：
+
+- **语义特征是池外增量**：在文本信息量大的任务上提升显著（Clothing Reviews +0.3234、Fine Food +0.2505），在文本信息量有限的任务上也保持正向（用户app +0.0025）
+- **特征进化在语义特征之上仍能叠加增益**：8 个任务全部进一步正增益（+0.008 ~ +0.3912），且接受特征数少（3~8 个），说明关卡筛选后留下的是低冗余的有效特征
+- **跨量级稳定**：数据量从 1.8 万到 100 万、数值特征池从 8 到 33 个，闭环均能正常收敛
+
 ## 前置依赖
 
 ### 基础环境
-参考仓库主 [`model-evo/README.md`](../README.md) 的前置依赖部分（Python 3.9+，numpy / pandas / scikit-learn / scipy / xgboost）。
+Python 3.9+，依赖 numpy / pandas / scikit-learn / scipy / xgboost。运行环境与 Coding Agent 接入方式参见仓库主 [`model-evo/README.md`](../README.md) 的「运行环境与前置依赖」部分。
 
 ### 可选依赖
 
