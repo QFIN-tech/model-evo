@@ -1,0 +1,21 @@
+# G1~G6 关卡阈值参考(缺省值即此表; 复制到 session_config.yaml 的 gates 段覆盖)
+#
+# 说明:
+# - g3 场景化: saturated(对照champion全列, 严苛0.9) / cold_start(对照本轮已接受, 宽松0.95)
+# - g4_g5_metric: auc 或 pr_auc(饱和+正样本率低建议 pr_auc)
+# - 多seed: n_seeds / g4_g5_ci_lower_bound(bootstrap CI 下界门槛)
+
+gates:
+  g1_timeout_s: 60.0
+  g2_min_auc: 0.5               # 放行"单变量弱、组合强"的特征; 真噪声仍被 G4/G5 挡
+  g2_min_coverage: 0.3
+  g2_max_psi: 0.3
+  g3_max_abs_corr: 0.9           # saturated 场景缺省(严苛)
+  g3_max_abs_corr_cold: 0.95     # cold_start 场景
+  g4_min_test_gain: 0.0
+  g5_min_oot_gain: 0.0005
+  g6_min_oot_gain: 0.001
+  # 多seed
+  n_seeds: 3                     # >1 启用多seed降噪; 1=回退单点
+  g4_g5_ci_lower_bound: 0.0      # 多seed增益 bootstrap CI 下界须 >= 此值
+  g4_g5_metric: auc              # "auc" 或 "pr_auc"
