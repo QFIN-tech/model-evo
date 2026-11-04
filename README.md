@@ -1,289 +1,194 @@
-# Model Evo
+# ModelEvo
 
-**ModelEvo**: Business-Aligned Model Evolution Framework — 一套以业务为导向、基于 Skill 编排的业务建模演化框架。
+**面向结构化与表格数据的自动建模 Agent，支持二分类、回归和 uplift。**
 
+给定数据、业务目标与验证方案，ModelEvo 在预算内探索特征、数据视图、模型和超参数，交付模型、预测与实验报告，并积累可供后续任务验证复用的经验。
 
-**核心设计理念**: 用 Coding Agent 做调度，用 Skill 做能力组件，用模型知识库做经验沉淀，用标准化产物目录做实验管理，用决策点做人机协同。利用大模型和 Agent 能力把传统依赖专家个人经验的建模流程，升级为可编排、可复用、可追溯、可进化的智能建模体系。
+核心理念是 **LLM 提出假设，确定性 Runtime 执行与裁决**：Coding Agent 理解业务和数据、编写实验并解释结果；Runtime 固定数据与评估协议，负责训练、统计裁决、资源调度和交付校验。
 
+[快速开始](#快速开始) · [效果展示](#效果展示) · [架构与流程](#架构与流程) · [仓库导航](#仓库导航) · [详细文档](#详细文档)
 
+## 🔥 News
 
-##  🔥 News
-- 【**2026. 09. 07**】发布**特征挖掘智能化**（`feature-mining-skills/`）第一版，包含**特征进化**（`feature-evolution-orchestration` / `feature-evolution-evaluation`，LLM 提假设 + 确定性系统判 G1~G6 关卡的 AlphaEvolve 式闭环，支持冷启动 / 饱和模型两种场景）与**语义特征挖掘**（`semantic-feature`，文本 -> Embedding -> 监督 Head -> 注册为候选原料）。
-- 【**2026. 07. 10**】发布V1.0版本，包含**建模智能化**（`model-skills/`），包含业务建模全流程 Skill 集合，覆盖从需求采集、样本准备、特征工程、模型开发、评估对比到归档沉淀的完整链路，支持 **classification（分类）** 与 **uplift（增益/因果）** 两种建模方式。
+- **2026.11.04｜发布 ModelEvo V2.0**：新增自动建模 Skill `model-evolution-skills/model-evolution-skill/`，包含特征与数据视图探索、模型与超参搜索、确认与交付门、跨任务经验库；支持二分类、回归和 uplift。
+- **2026.09.07｜发布特征挖掘智能化**：`feature-mining-skills/` 提供特征进化与语义特征挖掘，形成候选生成、确定性评估与反馈演进的闭环。
+- **2026.07.10｜发布 V1.0**：`model-skills/` 提供覆盖需求采集、样本准备、特征工程、训练、评估与归档的业务建模 Skill 集合，支持分类与 uplift。
 
-> **Status:** Public release (V1.0).<br>
-> **Maintainers:** [奇富科技 / Qfin Holdings](https://github.com/QFIN-tech)<br>
-> **Contact:** [dikiwixuan@gmail.com](mailto:dikiwixuan@gmail.com)
+> **Status:** Public release (V2.0);
 
-## 整体架构
-![](assets/ModelEvo-Infrastructure.png)
+## 核心能力
 
-```
-                          ┌─────────────────────────────┐
-   用户建模请求 ──────────▶│  model-task-routing         │  判定 classification / uplift
-                          │  （模型方向路由 skill）       │
-                          └───────┬──────────────┬───────┘
-                                  │              │
-                  classification  │              │  uplift
-                                  ▼              ▼
-                   classification-model-     uplift-model-
-                   orchestration             task-spec
-                                  │              │
-                                  ▼              ▼
-                    分类建模（见下）            uplift 建模
-```
-- `model-task-routing` 是唯一建模需求总入口，先判定任务类型，再进入对应建模类型的 `*-model-task-spec`。
-- `model-knowledge` 作为共享知识库沉淀与复用建模经验（业务领域知识 / 特征资产 / 历史模型档案 / 建模经验）。
+- **自主搜索**：先探索特征和数据视图，再搜索模型与超参数；按代批量试验，根据证据调整方向，并支持断点恢复。
+- **可信评估**：固定任务与评估协议，通过配对统计、选择校正和确认机制控制偶然选优风险。
+- **经验复用**：可选经验库保存原则、证据与模型配方，为后续任务提供检索和 warm-start；历史经验仍需在当前任务验证。
+- **完整交付**：输出重训模型、预测、训练历程与结果报告，保留实验代码、配置和裁决记录。
 
+## 快速开始
 
+### 运行环境与前置依赖
 
-## 目录结构
+- Linux / macOS，建议 Python 3.10 及以上。
+- 能加载 `SKILL.md`、执行 Python 并编写实验代码的 Coding Agent；下面以 Claude Code 为例。
+- 一份具有明确标签含义的本地 CSV / Parquet 样本。V2 本地首跑不需要 Spark，经验库也可关闭。
 
-```
-model-evo/
-├── model-skills/                            # 建模主流程 skill（本次发布主体）
-│   ├── model-task-routing/                  # 模型方向路由（总入口，分流 classification/uplift）
-│   ├── model-knowledge/                     # 模型知识库（跨流程共享）
-│   ├── feature-matching/                    # 特征匹配（跨流程共享）
-│   ├── feature-analysis/                    # 特征分析（跨流程共享）
-│   │
-│   ├── classification-model-orchestration/  # 分类建模编排（统筹分类全流程）
-│   ├── classification-model-task-spec/      # 建模任务澄清 / 规格化 + 样本分析
-│   ├── classification-model-recommend/      # 历史模型推荐
-│   ├── classification-model-development/    # 模型开发总控（迭代式编排）
-│   ├── classification-model-training/       # 模型训练（xgb / dnn / lr）
-│   ├── classification-model-tuning/         # 模型调参 / 特征筛选
-│   ├── classification-model-evaluation/     # 模型评估（单模型标准化评估）
-│   ├── classification-model-comparison/     # 模型对比（多模型 N-way）
-│   │
-│   ├── uplift-model-task-spec/              # uplift 任务澄清 / 规格化（流程入口）
-│   ├── uplift-model-sample-preparation/     # 样本切分方案 + 建模样本产物
-│   ├── uplift-model-sample-homogeneity-check/ # treatment/control 同质性检查
-│   ├── uplift-model-feature-quality-analysis/ # 特征质量诊断 + 筛选建议
-│   ├── uplift-model-s-learner-modeling/     # S-Learner 建模
-│   ├── uplift-model-t-learner-modeling/     # T-Learner 建模
-│   ├── uplift-model-tuning/                 # uplift 调参
-│   ├── uplift-model-result-comparison/      # uplift 模型对比
-│   ├── uplift-model-reporting/              # uplift 最终报告
-│   │
-│   └── _uplift-common/                      # uplift 公共代码（project_layout / data_loader / io）
-│
-├── _modelevo-shared/                        # 跨 skill 公共代码（config_io / fetch_spark / 等）
-│   ├── scripts/
-│   └── tests/
-│
-├── examples/                                # 示例（公开数据集切片，可直接跑通全流程）
-│   ├── model-classification-example1/       # 分类示例（Default of Credit Card Clients 公开数据集切片）
-│   └── model-uplift-example1/               # uplift 示例（Criteo Uplift 公开数据集切片）
-│
-└── feature-mining-skills/                   # 特征挖掘 skill（特征进化 + 语义特征挖掘）
-```
-
-## 分类建模流程（classification）
-
-由 `classification-model-orchestration` 统筹编排，主流程与执行层分工如下：
-
-**主流程**（含人工/交互决策点）：
-
-```
-task-spec ─▶ model-recommend ─▶ [是否建模?]
-                                     │ 是
-                                     ▼
-                            model-development ──▶ 归档至 model-knowledge
-                                     ▲  │
-                        (多轮迭代优化) │  ▼
-                              tuning / comparison
-```
-
-**执行层 skill**（被主流程/编排调度）：
-
-| Skill | 说明 |
-|---|---|
-| `feature-matching` | 特征匹配：从特征库检索并对齐候选特征（Spark 宽表取数或本地文件转写） |
-| `feature-analysis` | 特征分析：基础统计 / IV+AUC / PSI 报告 + Train/Test/OOT 切分，仅产报告不自动剔特征 |
-| `classification-model-training` | 模型训练（xgb / dnn / lr，八阶段产物，自动对齐历史 baseline） |
-| `classification-model-tuning` | 模型调参（Optuna）/ 特征筛选（PSI/IV/缺失率），产 `-tuned` / `-feat` 新 run |
-| `classification-model-evaluation` | 单模型标准化评估（AUC/KS/分桶排序性/业务指标 + 客群拆分，JSON+MD+XLSX） |
-| `classification-model-comparison` | 多模型 N-way 横向对比（delta 分析与缺口清单） |
-
-
-
-## Uplift 建模流程（uplift）
-
-覆盖任务定义 → 样本准备 → 同质性检查 → 特征质量分析 → S/T-Learner 建模 → 调参 → 多模型对比 → 最终报告的完整链路：
-
-| Skill | 说明 |
-|---|---|
-| `uplift-model-task-spec` | uplift 任务规格化（流程入口）：干预定义、目标增量、实验/对照组、样本主体、时间窗口、字段映射 |
-| `uplift-model-sample-preparation` | 样本语义检查 + 切分方案 + 建模样本产物 |
-| `uplift-model-sample-homogeneity-check` | treatment/control 协变量均衡性诊断 |
-| `uplift-model-feature-quality-analysis` | 特征质量诊断（缺失率/Split PSI/Monthly PSI/Uplift Bivar）+ 筛选建议 |
-| `uplift-model-s-learner-modeling` | S-Learner baseline 训练 |
-| `uplift-model-t-learner-modeling` | T-Learner baseline 训练 |
-| `uplift-model-tuning` | 基于 baseline 的 LightGBM learner 有边界调参 |
-| `uplift-model-result-comparison` | 多模型/版本确定性比较 → 推荐模型 |
-| `uplift-model-reporting` | 最终建模报告（MD + HTML + facts + manifest） |
-
-## 特征挖掘智能化原理（feature-mining-skills）
-
-`feature-mining-skills/` 由两个互补的子项目组成：
-
-### Project A｜Feature Evolution（特征进化）
-
-- **要解决的问题**：企业已拥有大量结构化特征时，围绕当前建模任务，持续发现更有价值的已有特征、特征之间新的组合与交互，以及新的统计 / 非线性 / 业务计算逻辑的 Feature Code。核心不是再造一个 Feature Factory，而是让大模型持续探索新的特征表达方式，并用真实模型效果判断哪些特征有价值。
-- **怎么做**：参考代码进化（Evolutionary Search）的思路形成闭环——**特征生成/组合 → 模型训练 → 效果评价 → Feedback → 下一轮进化**。LLM 负责提出 Feature Hypothesis、Feature Combination 或 Feature Code；确定性的训练与评价系统负责客观判定 AUC / KS / Lift / OOT 是否真正提升。有效方案被保留，并在此基础上继续演进。
-- **参考方法**：AlphaEvolve——LLM 生成候选代码 + 自动 Evaluator 客观评分 + Evolutionary Search 持续演进。ModelEvo 主要借鉴其 **Generate → Evaluate → Feedback → Evolve** 闭环，以及 Candidate Diversity、Exploration / Exploitation 等思想，不复制其完整系统实现。
-
-### Project B｜Semantic Feature（语义特征挖掘）
-
-- **要解决的问题**：传统业务模型主要依赖结构化变量，但大量业务信息存在于对话文本、客户描述、工单、营销交互、催收记录等非结构化文本中，需要把它们转化成传统模型可以直接使用的特征。
-- **怎么做**：一条简单、通用的技术路线——**Text → Embedding Encoder → Supervised Head → Semantic Feature**。Encoder 可用 BGE / Qwen Embedding 等可替换模型；基于业务 Label 训练监督 Head，产出 Semantic Score 或低维语义表征；不同文本窗口、Encoder、Head、聚合方式和输出形式构成不同变体。
-
-### A 与 B 的关系
-
-**B 负责创造新的语义特征能力，其产出的 Semantic Feature 作为 A 的候选输入；A 负责在所有特征中持续搜索、组合和演进。** 最终统一以能否带来主模型**稳定 OOT 增益**作为评价标准。
-
-## 共享 skill / 资产
-
-| Skill / 资产 | 说明 |
-|---|---|
-| `model-task-routing` | 模型方向路由：在需求沟通中判定 classification / uplift 并分流（总入口） |
-| `model-knowledge` | 模型知识库：沉淀业务领域知识、特征资产、历史模型档案与建模经验，供检索复用 |
-| `feature-matching` | 特征匹配：从特征库检索并对齐候选特征（分类 / uplift 共用） |
-| `feature-analysis` | 特征分析：质量评估与特征筛选辅助（分类 / uplift 共用） |
-| `_modelevo-shared/scripts/` | 跨 skill 公共代码：`config_io`（配置读写 + 数据安全红线）/ `fetch_spark` / `gen_fetch_command` / `spark_defaults` |
-
-## 关键依赖约定
-
-- **路由在最前**：`model-task-routing` 是总入口，先判定任务类型，再进入对应流程的 `*-model-task-spec`。
-- **命名前缀**：仅 classification 流程专属 skill 加 `classification-` 前缀，uplift 流程专属 skill 加 `uplift-` 前缀；跨流程共享 skill（`model-task-routing`、`model-knowledge`、`feature-matching`、`feature-analysis`）不加前缀。
-- **`name` 字段与目录同名**：每个 `SKILL.md` 的 `name` 必须等于其所在目录名。
-
-
-## 运行环境与前置依赖
-
-
-### 基础环境
-
-| 项 | 要求 |
-|---|---|
-| Python | 3.9+ |
-| 操作系统 | Linux / macOS |
-| Coding Agent | Claude Code / Codex / Trae / Qoder / WorkBuddy 等Coding Agent工具 |
-
-### 大数据环境（可选）
-**高阶用法才需要（参见下述场景三）**
-
-`feature-matching` / `classification-model-task-spec` / `classification-model-recommend` 的 **spark 模式**依赖：
-
-- Spark 3.x + YARN + HDFS 集群
-- PySpark环境配置
-
-
-### 安装
-
+### 1. 获取代码与安装依赖
 
 ```bash
-# 第一步：获取代码
-git clone <repo-url> model-evo
+git clone https://github.com/QFIN-tech/model-evo.git
 cd model-evo
 
-# 第二步：把 skill 安装到 Agent 的 skill 目录**（如 Claude Code 的 `~/.claude/skills`）
-export SKILL_ROOT=~/.claude/skills
-mkdir -p ${SKILL_ROOT}
-cp -r  model-skills/* ${SKILL_ROOT}
-cp -r  feature-mining-skills/* ${SKILL_ROOT}
-cp -r  _modelevo-shared/ ${SKILL_ROOT}
-
-# 第三步（可选）：如果要走spark模式，需要配置。
-# cd ${SKILL_ROOT}/_modelevo-shared/
-# 修改 scripts/spark_defaults.yaml 中的相关环境配置
-
+python3 -m venv .venv
+source .venv/bin/activate
+export MODELEVO_SKILL_DIR="$PWD/model-evolution-skills/model-evolution-skill"
+python -m pip install -r "$MODELEVO_SKILL_DIR/runtime/requirements.txt"
+python "$MODELEVO_SKILL_DIR/scripts/modelevo.py" --version
 ```
 
-### 其他接入说明（可选）
-如果要使用高阶用法：参考下述示例**场景三：复用公司历史模型与特征资产**
-需要修改知识库内容：具体修改参考[`model-skills/model-knowledge/README.md`](model-skills/model-knowledge/README.md)
+当前版本应输出 `2.20.0`。V2 的 Skill 根目录是 `model-evolution-skills/model-evolution-skill/`，其中包含 `SKILL.md`、`runtime/` 和 `scripts/`。
 
----
+### 2. 安装 Skill
 
-## 使用说明 · 场景 Case 示例
+以下为首次安装，将 V2 的 Skill 根目录链接到 Claude Code 的用户级 Skill 目录：
 
-ModelEvo 以 `model-task-routing` 为总入口。直接用自然语言描述建模诉求即可触发，无需手动指定 skill。下面给出几个典型场景。
-
-### 两条可选接入路径
-
-| 路径 | 取数方式 | 是否需要 Spark 集群 | 适合谁 |
-|---|---|---|---|
-| **A. 本地文件模式（推荐首跑）** | 直接读本地 parquet/csv | ❌ 不需要 | 想快速验证流程、手头已有含特征+标签的样本文件 |
-| **B. Spark 集群模式（生产取数）** | 从数仓宽表拉取 | ✅ 需要 Spark 3.x + YARN + HDFS | 样本与特征在数仓里、需规模化取数的生产团队 |
-
-**强烈建议先走路径 A 跑通全流程**，再扩展到路径 B。以下场景一和场景二都是本地模式，场景三为集群模式
-
-### 场景一：本地分类样本跑通分类全流程
-
-**适用**：手头已有一份含特征+标签的本地 parquet/csv，想快速跑通「特征分析 → 训练 → 评估 → 对比」。
-
-**步骤**：
-
-1. 准备样本（参考 [`examples/model-classification-example1/`](examples/model-classification-example1/)，Default of Credit Card Clients 公开数据集切片）。
-2. 在对话中输入：
-
-      ```
-      > 基于本地 data/sample.parquet 进行分类建模
-      ```
-
-3. `model-task-routing` 一次性抛出 Q1/Q2/Q3（预测目标 / 是否有干预 / 是否有实验组），回复后判定为 classification。
-4. 流程自动走 `local_file` 模式取数 → 特征分析 → baseline 训练 → 评估，产物落到 `runs/{时间戳}-{模型名}/`。
-5. 在 `development` 的 Stage 2 决策点选择「调参 / 特征筛选 / 换算法」迭代，最终在 `model-comparison/` 看多版本横向对比。
-
-**产物**：`runs/.../new-models/xgb-v1/evaluation/`（AUC/KS/分桶排序性 JSON+MD+XLSX）、`runs/.../model-comparison/`（多路对比）。
-
-
-### 场景二：本地Uplift 增益建模（发券/触达是否值得）
-
-**适用**：关心「对谁干预能带来增量」，而非「谁会发生结果」。例：发券后核销提升、外呼后动支提升。示例数据见 [`examples/model-uplift-example1/`](examples/model-uplift-example1/)（Criteo Uplift 公开数据集切片）。
-
-**步骤**：
-
-1. 输入诉求：
-
-      ```
-      > 我想做一个 uplift 模型，评估发券对不同用户的核销增量效果，有实验/对照组数据
-      ```
-
-2. `model-task-routing` 判定 Q2=有干预、Q3=有实验组 → `task_type=uplift`，路由到 `uplift-model-task-spec`。
-3. 依次走：样本准备 → 同质性检查（treatment/control 是否可比）→ 特征质量分析 → S-Learner / T-Learner 建模 → 调参 → 多模型对比 → 最终报告。
-4. `uplift-model-result-comparison` 给出推荐模型，`uplift-model-reporting` 产出 MD + HTML 报告。
-
-**产物**：`new-models/{experiment_id}/`（如 `new-models/exp-001-s_learner_baseline/`）下的模型元数据、raw/normalized AUUC、uplift 分箱、打分表、特征重要性。
-
-### 场景三：复用公司历史模型与特征资产（依赖spark环境/知识库内容适配）
-
-**适用**：针对业务建模大部分场景，新需求与某历史模型相似，想复用历史模型/特征/算法/参数。
-
-**步骤**：
-
-1. `classification-model-recommend` 从 `model-knowledge` 的模型台账 `model_catalog.csv` 检索可复用模型，规则召回 + 语义排序 + 适配度评估。
-2. 命中则委托 `classification-model-evaluation` 产三档评估，作为新模型 baseline 对齐基准。
-3. 新模型训练时自动与历史 baseline 做 AUC/KS/分档 delta 对比。
-
-### 场景四：断点续跑历史任务
-
-**适用**：上次建模中途断了，想接着跑。
-
-**步骤**：
-
-1. 新会话启动时，`classification-model-orchestration` 自动扫描 `runs/` 下最近 5 个 session，按 `_manifest.json` 推断进度。
-2. 列表询问「选历史序号续跑 / 新建」，选定后从断点阶段继续，不重跑已完成阶段。
-
-### 场景五：直接调用单个 Skill
-
-已知上下文时也可跳过路由直接调单个 skill，例如：
-
-```
-> 对 sample.parquet 做特征分析        # → feature-analysis
-> 对 evaluation 目录下的多个模型做横向对比   # → classification-model-comparison
-> 我想判断这两组数据是否同质/可比        # → uplift-model-sample-homogeneity-check
+```bash
+mkdir -p "$HOME/.claude/skills"
+ln -s "$MODELEVO_SKILL_DIR" "$HOME/.claude/skills/modelevo"
 ```
 
+若目标已存在，先检查它是否指向上述 V2 目录。使用其他 Agent 时，按其 Skill 加载方式配置同一目录。
+
+### 3. 启动一次冷启动建模
+
+在同一个终端中保持 Python 环境已激活。首次体验显式关闭经验库，再进入数据项目目录启动 Agent：
+
+```bash
+export MODELEVO_LIBRARY_ENABLED=0
+cd examples/model-classification-example1
+# 在此目录启动 Coding Agent
+```
+
+发送以下提示词即可使用仓库自带样本：
+
+```text
+使用 modelevo skill，对 data/sample.csv 建立信用卡违约二分类模型。
+目标列为 default payment next month，1 表示下个月违约，以 AUC 为主指标。
+```
+
+也可以提供自己的数据绝对路径、标签定义、真实观测时间与标签时间窗、验证方案和预算。Agent 会检查数据并补全任务协议；业务定义或泄漏列无法可靠判断时，会请求确认。示例数据的来源、授权和字段说明见[分类示例](examples/model-classification-example1/README.md)。
+
+### 4. 查看交付结果
+
+在 Agent 给出的运行目录中查看：
+
+| 位置 | 内容 |
+|---|---|
+| `report/report.html` | 训练历程与实验结果 |
+| `report/report.md` | 结果摘要与交付状态 |
+| `final-model/` | 通过交付门后的重训模型、预测与评估产物 |
+| `trials/` | 搜索阶段的实验代码、配置和工件 |
+
+若预算内没有满足交付条件的候选，报告会说明原因。`final-model/unconfirmed/` 中的产物仍属未确认状态，不能仅凭目录中有模型就视为正式交付。
+
+### 5. 启用跨任务经验库（可选）
+
+需要复用历史经验时，按 [V2 使用说明](model-evolution-skills/model-evolution-skill/README.md#5-启用经验库可选)配置并启动经验服务，再以启用经验库的环境启动 Agent 创建新任务。关闭服务与主动禁用经验库含义不同：服务不可达时可能使用本机缓存；完全冷启动需显式设置 `MODELEVO_LIBRARY_ENABLED=0`。
+
+## 效果展示
+
+### 公开数据集：冷启动建模
+
+在本次 **5 个公开数据集、固定切分、关闭历史经验**的评测中，ModelEvo 在 6 个单模型条目中取得最佳平均名次 **1.60**，其中 3 个数据集点估计排名第一。
+
+| 数据集（指标） | ModelEvo | AIDE 单模型 | raw-agent 单模型 | AutoGluon 单模型 | FLAML | TabPFN v2 |
+|---|---|---|---|---|---|---|
+| home_credit（AUC ↑） | **0.79315** | 0.76813 | 0.76773 | 0.77318 | 0.78634 | 0.73524 |
+| creditcard（AUC ↑） | **0.99601** | 0.98654 | 0.99423 | 0.92278 | 0.96664 | 0.98399 |
+| amazon（AUC ↑） | **0.87980** | 0.86979 | 0.86044 | 0.82792 | 0.81435 | 0.76180 |
+| house_sales（log1p RMSE ↓） | 0.17804 | 0.17610 | 0.18264 | 0.17836 | 0.17844 | **0.17026** |
+| adult（AUC ↑） | 0.92423 | 0.92305 | **0.92610** | 0.90409 | 0.91991 | 0.90881 |
+| 平均名次 | **1.60** | 2.80 | 3.40 | 4.60 | 4.20 | 4.40 |
+
+数据集、对照设置及包含集成方案的完整结果见[评测说明与榜单](model-evolution-skills/model-evolution-skill/docs/MODELEVO_V2_20_0_performance.md)。
+
+### 内部任务：历史配方复用
+
+在内部按时间切分的信贷动支预测任务中，已完成交付的历史运行记录如下。增益为各 run 的测试集 AUC 相对其基线的绝对提升。
+
+| 是否使用历史经验 | AUC 绝对提升 |
+|---|---|
+| 无历史经验 | +0.0067～+0.0094 |
+| 有历史经验 | +0.0127～+0.0133 |
+
+这些历史运行记录展示了复用特征配方的潜力。
+
+## 架构与流程
+
+![ModelEvo V2 架构：Agent 编排、Runtime 搜索裁决、确认交付与跨任务经验复用](model-evolution-skills/model-evolution-skill/docs/ModelEvo-V2-infrastructure.png)
+
+```text
+任务定义与数据检查 → 建立基线（可选历史配方 warm-start）
+  → 特征与数据视图探索 → 模型与超参搜索 → 确认与交付门
+  → 重训 → 一次性 final_test 评估 → 模型、预测与报告
+  → 经验快照与合并（启用经验库时）
+```
+
+| 层 | 职责 |
+|---|---|
+| Agent / Skill | 理解业务、提出假设、编写实验代码、解释结果 |
+| Runtime / CLI | 数据隔离、状态管理、候选规划、训练与资源调度、统计裁决和交付校验 |
+| 经验库（可选） | 保存原则与证据、检索历史配方、支持 warm-start 和经验合并 |
+
+详细执行阶段和实现分层见 [V2 架构与流程](model-evolution-skills/model-evolution-skill/README.md#架构与流程)。
+
+## V2 与 V1 的区别
+
+| 维度 | V1 `model-skills` | V2 `modelevo` |
+|---|---|---|
+| 定位 | Skill 化建模流程 | 自主搜索、可信评估与跨任务经验积累 |
+| 组织方式 | 多个 Skill 按业务阶段接力 | 一个 Skill + 统一 CLI 与 Runtime 状态机 |
+| 优化方式 | 用户在阶段决策点选择调参、筛特征或换算法 | Agent 与 Planner 按代探索，在预算与裁决门内迭代 |
+| 特征工程 | 特征匹配、质量分析与筛选 | 编写特征块、组合特征并探索数据视图 |
+| 选优与交付 | 标准化评估与多版本横向对比 | 配对统计、选择校正、确认机制与一次性最终评估 |
+| 任务类型 | 二分类、uplift | 二分类、回归、uplift |
+| 经验复用 | `model-knowledge` 静态知识与模型档案 | 经验库服务中的原则、证据与模型配方 |
+
+V1 的 `model-task-routing` 是旧版流程入口；V2 直接使用 `modelevo` Skill。`feature-mining-skills/` 保留为独立模块，提供特征进化与语义特征挖掘，其安装和执行协议见对应文档。
+
+## 仓库导航
+
+```text
+model-evo/
+├── model-evolution-skills/
+│   └── model-evolution-skill/  # V2：modelevo Skill、CLI、Runtime、经验服务及文档
+├── model-skills/              # V1：分类与 uplift 业务建模 Skill 集合
+├── feature-mining-skills/     # 独立特征进化与语义特征挖掘 Skill
+├── _modelevo-shared/          # V1 与特征挖掘模块使用的公共代码
+├── examples/                 # 分类与 uplift 的公开样本及数据说明
+└── assets/                   # 项目历史架构等资源
+```
+
+| 需求 | 入口 |
+|---|---|
+| 使用 V2 自主探索并交付模型 | [V2 使用说明](model-evolution-skills/model-evolution-skill/README.md) |
+| 使用 V1 按阶段执行分类 / uplift 建模，或接入 Spark 与历史资产 | [V1 安装与使用](model-skills/README.md) |
+| 独立进行特征进化或语义特征挖掘 | [特征挖掘模块](feature-mining-skills/README.md) |
+| 查看分类 / uplift 示例数据 | [分类示例](examples/model-classification-example1/README.md) · [uplift 示例](examples/model-uplift-example1/README.md) |
+
+## 交付与适用边界
+
+ModelEvo 适合有明确标签定义与验证方案、需要持续探索并交付模型的监督学习任务。业务目标、观测与标签时间边界、泄漏列等仍需业务判断；uplift 任务还需说明干预语义与处置分配方式。
+
+搜索不保证找到效果上限，也不保证预算内一定获得可交付候选。默认采用单模型方案，级联与融合按协议审批。Trial Python 继承宿主进程的权限，数据隔离、Lint 和产物校验不等同于操作系统级沙箱。
+
+## 详细文档
+
+- [V2 使用说明与开发指南](model-evolution-skills/model-evolution-skill/README.md) · [Agent 执行协议](model-evolution-skills/model-evolution-skill/SKILL.md)
+- [任务与数据协议](model-evolution-skills/model-evolution-skill/references/task-and-data.md) · [任务类型约定](model-evolution-skills/model-evolution-skill/references/task-type-conventions.md)
+- [特征探索](model-evolution-skills/model-evolution-skill/references/feature-exploration.md) · [搜索与评估](model-evolution-skills/model-evolution-skill/references/evolution-and-evaluation.md)
+- [经验与记忆](model-evolution-skills/model-evolution-skill/references/experience-and-memory.md) · [评测说明与榜单](model-evolution-skills/model-evolution-skill/docs/MODELEVO_V2_20_0_performance.md)
+
+## 维护与授权
+
+- **Maintainers:** [奇富科技 / Qfin Holdings](https://github.com/QFIN-tech)
+- **Contact:** [dikiwixuan@gmail.com](mailto:dikiwixuan@gmail.com)
+- **License:** [MIT](LICENSE)。示例数据的来源与授权见各示例 README。

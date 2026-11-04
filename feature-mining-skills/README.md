@@ -91,7 +91,24 @@ export_features（交付包: 特征代码 + 特征值 + 融合模型）+ finaliz
 ## 前置依赖
 
 ### 基础环境
-Python 3.9+，依赖 numpy / pandas / scikit-learn / scipy / xgboost。运行环境与 Coding Agent 接入方式参见仓库主 [`model-evo/README.md`](../README.md) 的「运行环境与前置依赖」部分。
+Python 3.9+，Linux / macOS，依赖 numpy / pandas / scikit-learn / scipy / xgboost，以及支持加载 Skill 和执行 Python 的 Coding Agent。
+本模块可独立安装，不依赖 V2 Runtime；项目概览见[仓库首页](../README.md)。
+
+### 安装
+
+从仓库根目录执行。以下以 Claude Code 为例，适用于首次安装：
+
+```bash
+export FEATURE_SKILL_ROOT="$HOME/.claude/skills"
+mkdir -p "$FEATURE_SKILL_ROOT"
+for skill_dir in feature-mining-skills/*/; do
+  cp -R "$skill_dir" "$FEATURE_SKILL_ROOT/"
+done
+cp -R _modelevo-shared "$FEATURE_SKILL_ROOT/"
+python -m pip install numpy pandas pyarrow scikit-learn scipy xgboost pyyaml
+```
+
+公共代码 `_modelevo-shared/` 需要与各 Skill 同级；若已经安装，复用现有公共目录，更新前先检查本地定制内容。
 
 ### 可选依赖
 

@@ -13,6 +13,8 @@
 - **共享能力**：特征匹配、特征分析、模型知识库（业务领域知识 / 特征资产 / 历史模型档案 / 建模经验）
 - **会话连续性**：基于 `runs/` 下的 `_manifest.json` 自动推断进度，支持断点续跑
 
+## 整体架构
+![ModelEvo V1 架构](_assets/ModelEvo-Infrastructure.png)
 
 ## 目录结构
 
@@ -145,8 +147,27 @@ model-task-routing（一次性提问 Q1/Q2/Q3 → 判定 task_type）
 ## 前置依赖
 
 ### 基础环境
-参考仓库主[`model-evo/README.md`](../README.md)的前置依赖部分。
 
+本目录为 **V1 业务建模 Skill 集合**，支持二分类与 uplift。需要 V2 自主搜索、回归或经验库时，见[仓库首页](../README.md)。
+
+V1 基础环境为 Python 3.9+、Linux / macOS，以及支持加载 Skill 和执行 Python 的 Coding Agent。
+各训练与评估环节的 Python 依赖见对应 Skill 的 `SKILL.md` 和参考文档。
+
+### 安装 V1 Skill
+
+从仓库根目录执行。以下以 Claude Code 为例，适用于首次安装：
+
+```bash
+export MODEL_SKILL_ROOT="$HOME/.claude/skills"
+mkdir -p "$MODEL_SKILL_ROOT"
+for skill_dir in model-skills/*/; do
+  cp -R "$skill_dir" "$MODEL_SKILL_ROOT/"
+done
+cp -R _modelevo-shared "$MODEL_SKILL_ROOT/"
+```
+
+公共代码 `_modelevo-shared/` 需要与各 Skill 同级。若已安装，更新前先检查目标目录及本地定制内容。
+特征进化与语义特征挖掘可[独立安装](../feature-mining-skills/README.md#安装)。
 
 ### 大数据取数（可选）
 
@@ -163,7 +184,49 @@ model-task-routing（一次性提问 Q1/Q2/Q3 → 判定 task_type）
 
 ## 使用说明
 
-参考仓库[`model-evo/README.md`](../README.md)的**使用说明**部分。
+V1 以 `model-task-routing` 为需求总入口，先判断 classification / uplift，再进入对应流程。
+推荐先用本地 CSV / Parquet 跑通流程，再接入 Spark 和公司历史资产。
+
+### 本地分类建模
+
+使用[分类示例](../examples/model-classification-example1/README.md)中的样本，在数据项目目录启动 Agent，输入：
+
+```text
+使用 V1 model-task-routing 流程，基于本地 data/sample.csv 进行二分类建模。
+目标列为 default payment next month，1 表示违约，ID 不作为特征。
+```
+
+流程依次进行任务澄清、特征分析、baseline 训练与评估；在 development 阶段选择调参、特征筛选或换算法继续迭代。
+运行目录为 `runs/{时间戳}-{模型名}/`，单模型评估位于 `new-models/{模型版本}/evaluation/`，多版本对比位于 `model-comparison/`。
+示例中的 `dt` 是随机生成的演示日期；它可演示切分流程，不能证明真实时间外泛化能力。
+
+### 本地 uplift 建模
+
+准备包含 treatment 标记、outcome 与特征的样本，输入：
+
+```text
+使用 V1 model-task-routing 流程建立 uplift 模型，评估发券对核销的增量效果。
+样本中有实验组、对照组、核销标签和用户特征。
+```
+
+流程为任务定义 → 样本准备 → 同质性检查 → 特征质量分析 → S/T-Learner → 调参 → 多模型对比 → 最终报告。
+数据与字段说明见 [uplift 示例](../examples/model-uplift-example1/README.md)。
+
+### 复用历史资产与 Spark 取数
+
+Spark 接入要求见上文「大数据取数」。按[知识库配置说明](model-knowledge/README.md)适配模型台账和特征资产后，
+`classification-model-recommend` 可检索历史模型、评估适配度，并在新模型评估中对齐历史 baseline。
+
+### 断点续跑与单独调用
+
+新会话中，`classification-model-orchestration` 扫描 `runs/` 下最近的 session，以 `_manifest.json` 推断进度；
+选定历史任务后从未完成的阶段继续。已知上下文时也可直接调用单个 Skill：
+
+```text
+用 feature-analysis 对 sample.parquet 做特征分析。
+用 classification-model-comparison 对多个模型的 evaluation 目录做横向对比。
+用 uplift-model-sample-homogeneity-check 检查实验组与对照组是否可比。
+```
 
 ## Session 产物结构
 
