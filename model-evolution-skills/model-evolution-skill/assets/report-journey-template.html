@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__JOURNEY_TITLE__ · ModelEvo 训练历程</title>
+<!-- ModelEvo 交付报告模板(assets/report-journey-template.html,v2.16.1)。
+     数据由 scripts/_mvo/report_html.py 注入到 #journey-data;纯内联 SVG/原生 JS,无外部依赖。 -->
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--ink:#1f2937;--sub:#6b7280;--line:#e5e7eb;--side:#0f172a;
+  --feat:#0ea5a4;--feat-l:#ccfbf1;--model:#7c3aed;--model-l:#ede9fe;--data:#2563eb;--data-l:#dbeafe;
+  --other:#64748b;--gold:#f59e0b;--gold-d:#b45309;--ok:#10b981;--bad:#ef4444;--mid:#60a5fa;--sidew:252px}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.6;font-size:15px;
+  font-family:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC","Source Han Sans SC",Helvetica,Arial,sans-serif}
+/* ---------- 左侧目录 ---------- */
+aside#toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidew);background:var(--side);color:#cbd5e1;
+  overflow-y:auto;padding:22px 14px 30px;z-index:20}
+#toc .brand{color:#fff;font-weight:700;font-size:15px;line-height:1.4;margin:0 6px 4px}
+#toc .brand-sub{font-size:12px;color:#94a3b8;margin:0 6px 16px;word-break:break-all}
+#toc a{display:block;text-decoration:none;color:#cbd5e1;font-size:13.5px;padding:6px 10px;border-radius:8px;
+  border-left:3px solid transparent;margin:1px 0}
+#toc a:hover{background:rgba(255,255,255,.07);color:#fff}
+#toc a.active{background:rgba(245,158,11,.14);color:#fde68a;border-left-color:var(--gold)}
+#toc a.sub{font-size:12.5px;padding:3px 10px 3px 26px;color:#94a3b8}
+#toc a.sub.active{color:#fde68a}
+#toc a.off{opacity:.35;pointer-events:none}
+#toc .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px;vertical-align:1px}
+#toc .sec{font-size:11px;letter-spacing:1px;color:#64748b;margin:14px 10px 4px}
+#toc-btn{display:none}
+main{margin-left:var(--sidew);padding:0 34px 60px;max-width:calc(1180px + var(--sidew))}
+/* ---------- 头部 ---------- */
+header.hero{background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 55%,#0e7490 100%);color:#fff;
+  margin:0 -34px;padding:36px 34px 30px}
+.hero h1{margin:0 0 6px;font-size:27px}
+.hero .lead{margin:0;color:#cbd5e1;font-size:14.5px;max-width:980px}
+.hero .headline{margin-top:12px;font-size:16px;color:#fde68a;font-weight:600}
+.tags{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px}
+.tag{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);padding:2px 10px;border-radius:999px;font-size:12.5px;color:#e2e8f0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:12px;margin-top:22px}
+.kpi{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:12px 14px}
+.kpi .k{font-size:12px;color:#cbd5e1}.kpi .v{font-size:19px;font-weight:700;margin-top:2px;white-space:nowrap}
+.kpi .d{font-size:12.5px;color:#5eead4;margin-top:1px}
+/* ---------- 正文 ---------- */
+section{padding:32px 0 6px;scroll-margin-top:8px}
+h2{font-size:21px;margin:0 0 4px}
+h2 .no{display:inline-block;min-width:30px;height:30px;line-height:30px;text-align:center;border-radius:9px;background:#0f172a;color:#fff;font-size:14px;margin-right:10px;vertical-align:2px}
+.desc{color:var(--sub);margin:0 0 14px;font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:inherit}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--sub);margin:6px 0 0}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.share{display:flex;height:38px;border-radius:10px;overflow:hidden;margin:10px 0 6px;font-size:13px;color:#fff;font-weight:600}
+.share div{display:flex;align-items:center;justify-content:center;white-space:nowrap;overflow:hidden}
+.path{position:relative;margin-left:16px;padding-left:28px;border-left:3px solid #e2e8f0}
+.step{position:relative;margin-bottom:16px;scroll-margin-top:10px}
+.step::before{content:attr(data-n);position:absolute;left:-46px;top:16px;width:32px;height:32px;border-radius:50%;
+  color:#fff;font-weight:700;text-align:center;line-height:32px;font-size:14px;background:var(--feat);box-shadow:0 0 0 4px var(--bg)}
+.step.model::before{background:var(--model)}.step.data::before{background:var(--data)}.step.other::before{background:var(--other)}
+.step .card{display:grid;grid-template-columns:1fr 220px;gap:18px}
+.step h3{margin:0 0 4px;font-size:16.5px}
+.chip{display:inline-block;font-size:12px;padding:1px 8px;border-radius:6px;margin-right:6px;vertical-align:2px}
+.chip.feature{background:var(--feat-l);color:#0f766e}.chip.model{background:var(--model-l);color:#5b21b6}
+.chip.data{background:var(--data-l);color:#1d4ed8}.chip.other{background:#f1f5f9;color:#334155}
+.step p{margin:6px 0;color:#374151}.step ul{margin:6px 0 0;padding-left:18px;color:#4b5563;font-size:14px}
+.metric{border-left:1px dashed var(--line);padding-left:16px}
+.metric .big{font-size:25px;font-weight:800;color:#047857;line-height:1.2}
+.step.model .metric .big{color:#6d28d9}
+.metric .lab{font-size:12px;color:var(--sub)}.metric .ci{font-size:12.5px;color:#4b5563;margin-top:3px}
+.metric .bar{height:8px;border-radius:4px;background:#f1f5f9;margin-top:10px;overflow:hidden}.metric .bar span{display:block;height:100%}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right}
+th:first-child,td:first-child{text-align:left}th{color:var(--sub);font-weight:600;font-size:13px;background:#f8fafc}
+td.good{color:#047857;font-weight:700}td.bad{color:#b91c1c;font-weight:700}
+.no-list{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.no-item{background:#fff;border:1px solid var(--line);border-left:4px solid var(--bad);border-radius:10px;padding:10px 14px;font-size:14px}
+.no-item.promising{border-left-color:var(--mid)}
+.no-item .dv{float:right;font-family:Menlo,Consolas,monospace;font-size:13px;color:var(--bad)}
+.no-item.promising .dv{color:#2563eb}.no-item div{color:var(--sub);font-size:13px;margin-top:2px}
+.ins-list{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.ins{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 16px}
+.ins h4{margin:0 0 4px;font-size:15px}.ins p{margin:0;color:#4b5563;font-size:14px}
+.tl{position:relative;margin:4px 0 0 8px;padding-left:22px;border-left:2px solid #cbd5e1}
+.tl .ev{position:relative;margin:0 0 11px}
+.tl .ev::before{content:"";position:absolute;left:-29px;top:6px;width:12px;height:12px;border-radius:50%;background:#94a3b8;box-shadow:0 0 0 3px #fff}
+.tl .ev.step::before{background:var(--gold)}.tl .ev.stop::before{background:var(--bad)}.tl .ev.user::before{background:#2563eb}
+.tl .t{font-size:12.5px;color:var(--sub)}
+.note{background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px 16px;color:#78350f;font-size:14px;margin-top:14px}
+.warn{background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d}
+code{font-family:Menlo,Consolas,monospace;font-size:12.5px;background:#f1f5f9;padding:0 5px;border-radius:4px}
+#tip{position:fixed;pointer-events:none;opacity:0;transition:opacity .12s;background:#0f172a;color:#f8fafc;
+  padding:9px 12px;border-radius:9px;font-size:12.5px;line-height:1.55;max-width:360px;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+#tip b{color:#fde68a}
+footer{color:var(--sub);font-size:12.5px;padding:24px 0 10px}
+@media (max-width:980px){
+  aside#toc{transform:translateX(-100%);transition:transform .2s}
+  aside#toc.open{transform:none}
+  #toc-btn{display:block;position:fixed;top:12px;left:12px;z-index:30;background:#0f172a;color:#fff;border:none;
+    border-radius:10px;padding:8px 12px;font-size:14px}
+  main{margin-left:0;padding:0 16px 40px}header.hero{margin:0 -16px;padding:56px 16px 24px}
+  .grid2,.no-list,.ins-list{grid-template-columns:1fr}.step .card{grid-template-columns:1fr}.metric{border-left:none;padding-left:0}}
+</style>
+</head>
+<body>
+<div id="tip"></div>
+<button id="toc-btn" type="button">☰ 目录</button>
+<aside id="toc"><div class="brand" id="toc-title"></div><div class="brand-sub" id="toc-sub"></div><nav id="toc-nav"></nav></aside>
+<main>
+  <header class="hero" id="s-overview">
+    <h1 id="h-title"></h1><p class="lead" id="h-lead"></p>
+    <div class="headline" id="h-headline"></div><div class="tags" id="h-tags"></div><div class="kpis" id="h-kpis"></div>
+  </header>
+  <section id="s-ladder"><h2><span class="no">1</span>提升阶梯</h2><p class="desc" id="d-ladder"></p>
+    <div class="card"><svg id="c-ladder" viewBox="0 0 1000 400"></svg>
+      <div style="margin-top:8px;font-weight:600">累计增益的来源构成</div><div class="share" id="c-share"></div></div></section>
+  <section id="s-evo"><h2><span class="no">2</span>进化地图</h2>
+    <p class="desc">横轴为代数,纵轴为验证集主指标(越往上越好)。连线为父子关系,金色粗线为冠军路径。悬停任一点查看假设与配对检验结果。</p>
+    <div class="card"><svg id="c-evo" viewBox="0 0 1000 480"></svg><div class="legend" id="l-evo"></div></div></section>
+  <section id="s-path"><h2><span class="no">3</span>有效的尝试方向与路径</h2>
+    <p class="desc">按发生顺序列出冠军路径上真正兑现增益的每一步(确认实验不计)。每一步都通过了配对 bootstrap 与同代多重检验;增益已按指标方向归一(正 = 更好)。</p>
+    <div class="path" id="c-path"></div></section>
+  <section id="s-forest"><h2><span class="no">4</span>全部尝试一览</h2>
+    <p class="desc" id="d-forest"></p><div class="card"><svg id="c-forest" viewBox="0 0 1000 600"></svg></div></section>
+  <section id="s-fals"><h2><span class="no">5</span>证伪与递减方向</h2>
+    <p class="desc">失败同样是证据。红框为被拒绝(显著变差或无增益),蓝框为有信号但未通过多重检验/落在噪声内。</p>
+    <div class="no-list" id="c-fals"></div></section>
+  <section id="s-final"><h2><span class="no">6</span>最终效果</h2><p class="desc" id="d-final"></p>
+    <div class="card" id="c-final-table"></div>
+    <div class="grid2" style="margin-top:18px" id="c-final-charts">
+      <div class="card" id="w-cap"><div style="font-weight:600" id="t-cap"></div><div class="desc" style="margin:0;font-size:13px">按模型预测从高到低取前 k% 人群,累计捕获的标签总量占比(shadow 面)</div>
+        <svg id="c-cap" viewBox="0 0 520 330"></svg><div class="legend"><span><i style="background:var(--gold)"></i>交付模型</span><span><i style="background:#64748b"></i>基线</span><span><i style="background:#cbd5e1"></i>随机</span></div></div>
+      <div class="card" id="w-dec"><div style="font-weight:600" id="t-dec"></div><div class="desc" style="margin:0;font-size:13px">桶 1 = 预测最高的 10%;好的排序应逐桶单调、头部高、底部低</div>
+        <svg id="c-dec" viewBox="0 0 520 330"></svg><div class="legend" id="l-dec"></div></div>
+    </div><div id="c-notes"></div></section>
+  <section id="s-process"><h2><span class="no">7</span>过程与算力</h2>
+    <p class="desc">柱为每代墙钟时间与 trial 数,折线为截至该代的最佳验证指标。</p>
+    <div class="card"><svg id="c-gen" viewBox="0 0 1000 300"></svg></div>
+    <div class="card" style="margin-top:18px" id="w-donut"><div style="font-weight:600" id="t-donut"></div><svg id="c-donut" viewBox="0 0 1000 300"></svg></div></section>
+  <section id="s-events"><h2><span class="no">8</span>关键节点与用户裁决</h2>
+    <p class="desc">冠军路径的里程碑、Runtime 的停止判定,以及运行中登记的用户裁决(logs/user-decisions.md)。</p>
+    <div class="grid2"><div class="card"><div style="font-weight:600;margin-bottom:6px">里程碑</div><div class="tl" id="c-events"></div></div>
+      <div class="card"><div style="font-weight:600;margin-bottom:6px">用户裁决</div><div class="tl" id="c-decisions"></div></div></div></section>
+  <section id="s-insights"><h2><span class="no">9</span>经验要点</h2>
+    <p class="desc">可复用到同类任务的结论(来自叙述文件或导出到全局经验库的经验卡)。</p><div class="ins-list" id="c-ins"></div></section>
+  <footer id="foot"></footer>
+</main>
+<script type="application/json" id="journey-data">__JOURNEY_DATA__</script>
+<script>
+"use strict";
+const D = JSON.parse(document.getElementById("journey-data").textContent);
+const M = D.meta || {}, HIB = !!M.higher_is_better, MET = M.metric || "metric";
+const BETTER = HIB ? "越高越好" : "越低越好";
+const CAT = {feature:["特征","#0ea5a4"], model:["模型/超参/训练","#7c3aed"], data:["数据视图","#2563eb"], other:["其它","#64748b"]};
+const VC = {baseline:"#64748b",accepted:"#10b981",confirmed:"#f59e0b",promising:"#60a5fa",rejected:"#ef4444"};
+const VN = {baseline:"基线",accepted:"accepted",confirmed:"confirmed",promising:"promising",rejected:"rejected"};
+const T = D.trials || [], byId = Object.fromEntries(T.map(t => [t.id, t])), PATH = D.path || [];
+const MDE = D.mde || 0.001;
+
+/* ---------- 工具 ---------- */
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, a, p){ const e = document.createElementNS(NS, tag); for (const k in (a||{})) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; }
+function tx(p, x, y, s, a){ const t = el("text", Object.assign({x:x, y:y}, a||{}), p); t.textContent = s; return t; }
+function h(tag, cls, html, p){ const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; if (p) p.appendChild(e); return e; }
+function $(id){ return document.getElementById(id); }
+const lin = (d0, d1, r0, r1) => v => r0 + (v - d0) * (r1 - r0) / ((d1 - d0) || 1);
+const fin = v => typeof v === "number" && isFinite(v);
+const sg = (v, n) => fin(v) ? (v > 0 ? "+" : "") + v.toFixed(n) : "—";
+const fm = (v, n) => fin(v) ? v.toFixed(n === undefined ? 4 : n) : "—";
+const esc = s => String(s === null || s === undefined ? "" : s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const big = v => fin(v) ? (Math.abs(v) >= 100 ? Math.round(v).toLocaleString() : v.toFixed(Math.abs(v) >= 10 ? 1 : 3)) : "—";
+const tip = $("tip");
+function mv(ev){ let x = ev.clientX + 14, y = ev.clientY + 14; if (x + tip.offsetWidth > window.innerWidth - 8) x = ev.clientX - tip.offsetWidth - 14;
+  if (y + tip.offsetHeight > window.innerHeight - 8) y = ev.clientY - tip.offsetHeight - 14; tip.style.left = x + "px"; tip.style.top = y + "px"; }
+function tipOn(n, html){ n.addEventListener("mouseenter", e => { tip.innerHTML = html; tip.style.opacity = 1; mv(e); });
+  n.addEventListener("mousemove", mv); n.addEventListener("mouseleave", () => { tip.style.opacity = 0; }); n.style.cursor = "pointer"; }
+function ttip(t){ const ci = t.ci ? ` [${sg(t.ci[0],5)}, ${sg(t.ci[1],5)}]` : "";
+  return `<b>trial-${esc(t.sid)}</b> · gen-${String(t.g).padStart(2,"0")} · ${esc(t.action)}<br>${esc(t.label)}<br>${MET} ${fm(t.metric,5)}` +
+    Object.entries(t.secondary||{}).map(([k,v]) => ` · ${k} ${fm(v,4)}`).join("") +
+    `<br>Δ vs 父代 ${t.dp === null ? "—" : sg(t.dp,5) + ci}<br>verdict:<b>${esc(VN[t.verdict] || t.verdict || "—")}</b>` + (t.on_path ? " ★ 冠军路径" : ""); }
+function niceTicks(lo, hi, n){ const span = (hi - lo) || 1, raw = span / (n || 5), mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1,2,2.5,5,10].map(m => m * mag).find(s => span / s <= (n || 5)) || raw; const out = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi + step * 1e-6; v += step) out.push(+v.toFixed(10)); return out; }
+function hide(id){ const s = $(id); if (s) s.style.display = "none"; const a = document.querySelector(`#toc-nav a[href="#${id}"]`); if (a) a.classList.add("off"); }
+
+/* ---------- 头部 / 目录 ---------- */
+(function head(){
+  const name = M.task_name || M.task_id || "ModelEvo 任务";
+  $("h-title").textContent = name; $("toc-title").textContent = name; $("toc-sub").textContent = M.task_id || "";
+  $("h-lead").textContent = (M.value_definition ? `目标:${M.value_definition}。` : "") + `主指标 ${MET}(${BETTER})。`;
+  $("h-headline").textContent = D.headline || "";
+  const sp = M.split || {}, tags = [];
+  if (M.n_rows) tags.push(`${Number(M.n_rows).toLocaleString()} 行 · ${M.n_features || "?"} 特征`);
+  if (sp.train) tags.push(`train ${sp.train}`); if (sp.validation) tags.push(`val ${sp.validation}`);
+  if (sp.shadow_test) tags.push(`shadow ${sp.shadow_test}`); if (sp.final_test) tags.push(`final ${sp.final_test}`);
+  tags.push(`${(D.generations||[]).length} 代 · ${T.length} 个有效 trial`);
+  if (D.confirmations && D.confirmations.n) tags.push(`独立确认 ${D.confirmations.passed}/${D.confirmations.n} 通过`);
+  tags.forEach(s => h("span", "tag", esc(s), $("h-tags")));
+  const K = $("h-kpis"), kpi = (k, v, d) => h("div", "kpi", `<div class="k">${esc(k)}</div><div class="v">${v}</div><div class="d">${esc(d||"")}</div>`, K);
+  if (fin(D.baseline_metric) && fin(D.champion_metric)) { const g = HIB ? D.champion_metric - D.baseline_metric : D.baseline_metric - D.champion_metric;
+    kpi(`validation ${MET}`, `${fm(D.baseline_metric)} → ${fm(D.champion_metric)}`, `改进 ${sg(g,4)}(${(g / Math.abs(D.baseline_metric) * 100).toFixed(2)}%)`); }
+  const F = (D.final && D.final.faces) || [];
+  for (const key of ["shadow","final"]) { const f = F.find(x => x.key === key);
+    if (f && f.baseline && f.delivery && fin(f.baseline[MET]) && fin(f.delivery[MET])) { const g = HIB ? f.delivery[MET] - f.baseline[MET] : f.baseline[MET] - f.delivery[MET];
+      kpi(`${key === "final" ? "final_test(一次性盲测)" : "shadow"} ${MET}`, `${fm(f.baseline[MET])} → ${fm(f.delivery[MET])}`, `交付 vs 基线 ${sg(g,4)}`); } }
+  const r2 = (M.secondary||[]).find(m => m === "r2" || m === "auc" || m === "ks");
+  const champ = byId[D.champion_id], base = byId[D.baseline_id];
+  if (r2 && champ && base && fin(champ.secondary[r2]) && fin(base.secondary[r2])) kpi(`validation ${r2}`, `${fm(base.secondary[r2],3)} → ${fm(champ.secondary[r2],3)}`, "次指标");
+  const ss = D.shadow_seg;
+  if (ss && ss.deliv && ss.base) kpi("前 10% 人群捕获", `${(ss.base.top["10%"]*100).toFixed(1)}% → ${(ss.deliv.top["10%"]*100).toFixed(1)}%`, `shadow · ${ss.scale === "raw" ? "原值" : "标签"}口径`);
+  if (fin(D.trial_hours)) kpi("算力", `${D.trial_hours.toFixed(1)} h`, "所有 trial 训练+评估");
+  // 目录
+  const nav = $("toc-nav"), link = (href, label, cls, dot) => { const a = h("a", cls || "", (dot ? `<span class="dot" style="background:${dot}"></span>` : "") + esc(label), nav); a.href = href; return a; };
+  h("div", "sec", "总览", nav); link("#s-overview", "概览与关键指标");
+  h("div", "sec", "提升过程", nav); link("#s-ladder", "① 提升阶梯"); link("#s-evo", "② 进化地图"); link("#s-path", "③ 有效方向与路径");
+  (D.steps||[]).forEach((s, i) => link(`#step-${s.sid}`, `${i + 1}. ${s.title}`, "sub", (CAT[s.category]||CAT.other)[1]));
+  link("#s-forest", "④ 全部尝试一览"); link("#s-fals", "⑤ 证伪与递减");
+  h("div", "sec", "结果", nav); link("#s-final", "⑥ 最终效果"); link("#s-process", "⑦ 过程与算力");
+  link("#s-events", "⑧ 关键节点与裁决"); link("#s-insights", "⑨ 经验要点");
+  $("toc-btn").addEventListener("click", () => $("toc").classList.toggle("open"));
+  nav.addEventListener("click", () => $("toc").classList.remove("open"));
+})();
+
+/* ---------- ① 阶梯 ---------- */
+(function ladder(){
+  const S = D.steps || [];
+  if (!S.length || !fin(D.baseline_metric)) { hide("s-ladder"); return; }
+  const total = S.reduce((a, s) => a + s.display_gain, 0);
+  $("d-ladder").textContent = `冠军路径上 ${S.length} 个被接受的改动,把验证集 ${MET} 从 ${fm(D.baseline_metric)} 推到 ${fm(D.champion_metric)}(${BETTER});最后一级为新 seed 独立确认的搜索冠军。悬停查看每一步。`;
+  const svg = $("c-ladder"), L = 78, R = 16, Tp = 30, B = 80, W = 1000 - L - R, H = 400 - Tp - B;
+  const vals = [D.baseline_metric, D.champion_metric]; let cur = D.baseline_metric; S.forEach(s => { vals.push(s.after); });
+  const lo = Math.min(...vals), hi = Math.max(...vals), pad = (hi - lo) * 0.18 || 0.001;
+  const yb = HIB ? lo - pad : hi + pad;                      // 基座端(远离"更好"方向)
+  const y = lin(lo - pad, hi + pad, Tp + H, Tp);
+  niceTicks(lo - pad, hi + pad, 6).forEach(v => { el("line", {x1:L, x2:L + W, y1:y(v), y2:y(v), stroke:"#eef2f7"}, svg);
+    tx(svg, L - 8, y(v) + 4, v.toFixed(4), {"text-anchor":"end", "font-size":11, fill:"#94a3b8"}); });
+  tx(svg, L + 4, Tp - 12, `${MET}(${BETTER},纵轴截断)`, {"font-size":12, fill:"#94a3b8"});
+  const items = [{k:"基线", v:D.baseline_metric, type:"base"}].concat(S.map(s => ({k:s.title, s:s, type:s.category}))).concat([{k:"搜索冠军", v:D.champion_metric, type:"final"}]);
+  const bw = W / items.length;
+  items.forEach((it, i) => {
+    const cx = L + bw * i + bw / 2, w = bw * 0.58, x0 = cx - w / 2; let a, b, col, lab;
+    if (it.type === "base" || it.type === "final") { a = y(it.v); b = y(yb); col = it.type === "base" ? "#64748b" : "#f59e0b"; lab = fm(it.v); }
+    else { a = y(cur); b = y(it.s.after); col = (CAT[it.type]||CAT.other)[1]; lab = sg(it.s.display_gain, 4); }
+    const r = el("rect", {x:x0, y:Math.min(a, b), width:w, height:Math.max(2, Math.abs(b - a)), rx:5, fill:col, opacity:.92}, svg);
+    if (it.s) { const yy = Math.max(a, b);
+      tx(svg, cx, yy + 15, lab, {"text-anchor":"middle", "font-size":12.5, "font-weight":700, fill:col});
+      tx(svg, cx, yy + 29, "→ " + fm(it.s.after), {"text-anchor":"middle", "font-size":10.5, fill:"#64748b"});
+      el("line", {x1:x0 - bw * 0.42, x2:x0, y1:y(cur), y2:y(cur), stroke:"#94a3b8", "stroke-dasharray":"3 3"}, svg);
+      tipOn(r, `<b>${esc(it.s.title)}</b><br>trial-${esc(it.s.sid)} · gen-${String(it.s.g).padStart(2,"0")}<br>增益 ${sg(it.s.display_gain,5)}(占累计 ${(it.s.display_gain / total * 100).toFixed(1)}%)<br>之后 ${MET} ${fm(it.s.after,5)}`);
+      cur = it.s.after;
+    } else { tx(svg, cx, Math.min(a, b) - 7, lab, {"text-anchor":"middle", "font-size":13, "font-weight":800, fill: it.type === "final" ? "#b45309" : "#334155"});
+      tipOn(r, `<b>${it.k}</b><br>${MET} ${fm(it.v,5)}` + (it.type === "final" ? `<br>trial-${esc((byId[D.champion_id]||{}).sid)}` : "")); }
+    const words = it.k.length > 9 ? [it.k.slice(0, 9), it.k.slice(9, 18) + (it.k.length > 18 ? "…" : "")] : [it.k];
+    words.forEach((wd, j) => tx(svg, cx, Tp + H + 48 + j * 14, wd, {"text-anchor":"middle", "font-size":11.5, fill: j ? "#64748b" : "#1f2937"}));
+  });
+  const box = $("c-share");
+  Object.entries(D.shares || {}).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).forEach(([k, v]) => {
+    const d = h("div", "", `${(CAT[k]||CAT.other)[0]} ${(v / total * 100).toFixed(0)}%`, box); d.style.width = (v / total * 100) + "%";
+    d.style.background = (CAT[k]||CAT.other)[1]; d.title = `${(CAT[k]||CAT.other)[0]}:${sg(v,5)}`; });
+})();
+
+/* ---------- ② 进化地图 ---------- */
+(function evo(){
+  if (!T.length) { hide("s-evo"); return; }
+  const svg = $("c-evo"), L = 78, R = 18, Tp = 30, B = 44, W = 1000 - L - R, H = 480 - Tp - B;
+  const G = Math.max(...T.map(t => t.g)) + 1, ms = T.map(t => t.metric), lo = Math.min(...ms), hi = Math.max(...ms), pad = (hi - lo) * 0.06 || 0.001;
+  const y = HIB ? lin(lo - pad, hi + pad, Tp + H, Tp) : lin(hi + pad, lo - pad, Tp + H, Tp);
+  const gw = W / G, gx = g => L + gw * g;
+  niceTicks(lo - pad, hi + pad, 7).forEach(v => { el("line", {x1:L, x2:L + W, y1:y(v), y2:y(v), stroke:"#eef2f7"}, svg);
+    tx(svg, L - 8, y(v) + 4, v.toFixed(4), {"text-anchor":"end", "font-size":11, fill:"#94a3b8"}); });
+  tx(svg, L + 4, Tp - 12, `${MET} ↑ 更好`, {"font-size":12, fill:"#94a3b8"});
+  for (let g = 0; g < G; g++) { if (g % 2) el("rect", {x:gx(g), y:Tp, width:gw, height:H, fill:"#f8fafc"}, svg);
+    tx(svg, gx(g) + gw / 2, Tp + H + 18, "gen-" + String(g).padStart(2,"0"), {"text-anchor":"middle", "font-size":11.5, fill:"#64748b"}); }
+  const pos = {};
+  for (let g = 0; g < G; g++) { const ts = T.filter(t => t.g === g); ts.forEach((t, i) => { pos[t.id] = [gx(g) + gw * (i + 1) / (ts.length + 1), y(t.metric)]; }); }
+  T.forEach(t => t.parents.forEach(p => { if (pos[p]) el("line", {x1:pos[p][0], y1:pos[p][1], x2:pos[t.id][0], y2:pos[t.id][1], stroke:"#cbd5e1", "stroke-width":1.1}, svg); }));
+  const pp = PATH.filter(id => pos[id]).map(id => pos[id].join(","));
+  if (pp.length > 1) el("polyline", {points:pp.join(" "), fill:"none", stroke:"#f59e0b", "stroke-width":4, "stroke-linejoin":"round", opacity:.85}, svg);
+  (D.events||[]).filter(e => e.kind === "stop" && e.g !== null && e.g < G - 1).forEach(e => { const x = gx(e.g + 1);
+    el("line", {x1:x, x2:x, y1:Tp, y2:Tp + H, stroke:"#ef4444", "stroke-dasharray":"5 4", "stroke-width":1.4}, svg);
+    const n = tx(svg, x - 6, Tp + 14, "Runtime 停止判定 →继续", {"font-size":11, fill:"#b91c1c", "text-anchor":"end"}); tipOn(n, `<b>${esc(e.title)}</b><br>${esc(e.text)}`); });
+  T.forEach(t => { const [cx, cy] = pos[t.id];
+    const c = el("circle", {cx:cx, cy:cy, r: t.on_path ? 8.5 : 6, fill:VC[t.verdict] || "#94a3b8", stroke: t.on_path ? "#b45309" : "#fff", "stroke-width": t.on_path ? 2.4 : 1.4}, svg);
+    if (t.action === "confirm") el("circle", {cx:cx, cy:cy, r:2.5, fill:"#fff", "pointer-events":"none"}, svg);
+    if (t.on_path) tx(svg, cx + 10, cy - 8, t.sid, {"font-size":11, "font-weight":700, fill:"#92400e"});
+    tipOn(c, ttip(t)); });
+  const lg = $("l-evo");
+  Object.entries(VN).forEach(([k, v]) => h("span", "", `<i style="background:${VC[k]}"></i>${v}`, lg));
+  h("span", "", `<i style="background:#fff;border:2px solid #94a3b8"></i>空心点 = 确认实验`, lg);
+})();
+
+/* ---------- ③ 有效路径 ---------- */
+(function path(){
+  const S = D.steps || [], box = $("c-path");
+  if (!S.length) { hide("s-path"); return; }
+  const maxG = Math.max(...S.map(s => Math.abs(s.display_gain)));
+  S.forEach((s, i) => { const c = CAT[s.category] || CAT.other;
+    const div = h("div", "step " + s.category, undefined, box); div.dataset.n = i + 1; div.id = "step-" + s.sid;
+    div.innerHTML = `<div class="card"><div><h3><span class="chip ${s.category}">${c[0]} · gen-${String(s.g).padStart(2,"0")}</span>${esc(s.title)}</h3>
+      <p>${esc(s.why)}</p>${(s.evidence||[]).length ? `<ul>${s.evidence.map(e => `<li>${esc(e)}</li>`).join("")}</ul>` : ""}</div>
+      <div class="metric"><div class="lab">增益(${BETTER},已归一)</div><div class="big">${sg(s.display_gain,4)}</div>
+      <div class="ci">Δ vs 父代 ${sg(s.dp,5)}</div>${s.ci ? `<div class="ci">95% CI [${sg(s.ci[0],5)}, ${sg(s.ci[1],5)}]</div>` : ""}
+      <div class="ci">${(Math.abs(s.display_gain) / MDE).toFixed(1)} × MDE · trial-${esc(s.sid)}</div>
+      <div class="bar"><span style="width:${Math.min(100, Math.abs(s.display_gain) / maxG * 100)}%;background:${c[1]}"></span></div></div></div>`; });
+})();
+
+/* ---------- ④ 森林图 ---------- */
+(function forest(){
+  const rows = T.filter(t => t.gain !== null && t.gain_ci && t.action !== "confirm");
+  if (!rows.length) { hide("s-forest"); return; }
+  $("d-forest").textContent = `每行一个方向 trial(确认实验不计)。点为相对父代的增益(已按"${BETTER}"归一,向右 = 更好),横线为 95% CI,灰带为 ±MDE(${MDE})。★ 为冠军路径。`;
+  const svg = $("c-forest"), L = 370, R = 70, Tp = 34, rh = 24, H = rows.length * rh, W = 1000 - L - R;
+  svg.setAttribute("viewBox", `0 0 1000 ${Tp + H + 46}`);
+  const lo = Math.min(-MDE * 2, ...rows.map(r => r.gain_ci[0])), hi = Math.max(MDE * 2, ...rows.map(r => r.gain_ci[1])), pd = (hi - lo) * 0.04;
+  const x = lin(lo - pd, hi + pd, L, L + W);
+  el("rect", {x:x(-MDE), y:Tp - 8, width:x(MDE) - x(-MDE), height:H + 8, fill:"#f1f5f9"}, svg);
+  niceTicks(lo - pd, hi + pd, 8).forEach(v => { el("line", {x1:x(v), x2:x(v), y1:Tp - 8, y2:Tp + H, stroke:"#eef2f7"}, svg);
+    tx(svg, x(v), Tp + H + 17, v.toFixed(3), {"text-anchor":"middle", "font-size":10.5, fill:"#94a3b8"}); });
+  el("line", {x1:x(0), x2:x(0), y1:Tp - 8, y2:Tp + H, stroke:"#94a3b8", "stroke-width":1.3}, svg);
+  tx(svg, L, Tp - 14, "← 变差", {"font-size":12, fill:"#b91c1c", "font-weight":600});
+  tx(svg, L + W, Tp - 14, "更好 →", {"font-size":12, fill:"#047857", "font-weight":600, "text-anchor":"end"});
+  let lastG = -1;
+  rows.forEach((t, i) => { const cy = Tp + i * rh + rh / 2;
+    if (t.g !== lastG) { if (i) el("line", {x1:8, x2:992, y1:cy - rh / 2, y2:cy - rh / 2, stroke:"#e5e7eb"}, svg);
+      tx(svg, 10, cy + 4, "gen-" + String(t.g).padStart(2,"0"), {"font-size":10.5, fill:"#94a3b8"}); lastG = t.g; }
+    const lab = (t.on_path ? "★ " : "") + `${t.sid} ${t.label}`;
+    tx(svg, 58, cy + 4, lab.length > 31 ? lab.slice(0, 31) + "…" : lab, {"font-size":12, fill: t.on_path ? "#92400e" : "#334155", "font-weight": t.on_path ? 700 : 400});
+    const col = VC[t.verdict] || "#94a3b8";
+    el("line", {x1:x(t.gain_ci[0]), x2:x(t.gain_ci[1]), y1:cy, y2:cy, stroke:col, "stroke-width":2.3, "stroke-linecap":"round"}, svg);
+    el("circle", {cx:x(t.gain), cy:cy, r: t.on_path ? 6 : 4.6, fill:col, stroke: t.on_path ? "#b45309" : "#fff", "stroke-width":1.5}, svg);
+    tx(svg, L + W + 8, cy + 4, sg(t.gain, 4), {"font-size":11, fill:"#475569", "font-family":"Menlo,Consolas,monospace"});
+    tipOn(el("rect", {x:0, y:cy - rh / 2, width:1000, height:rh, fill:"transparent"}, svg), ttip(t)); });
+})();
+
+/* ---------- ⑤ 证伪 ---------- */
+(function fals(){
+  const F = D.falsified || [], box = $("c-fals");
+  if (!F.length) { hide("s-fals"); return; }
+  F.forEach(f => h("div", "no-item " + (f.verdict === "promising" ? "promising" : ""),
+    `<span class="dv">${sg(f.gain, 4)}</span><b>${esc(f.sid)} ${esc(f.title)}</b><div>${esc(f.why)}</div>`, box));
+})();
+
+/* ---------- ⑥ 最终效果 ---------- */
+(function final(){
+  const F = D.final;
+  if (!F || !F.faces) { hide("s-final"); return; }
+  const mets = [MET].concat(M.secondary || []);
+  let desc = F.evaluated ? "final_test 只在 evaluate-final 的一次性 gate 内评测;shadow 与 final 都晚于全部训练数据,是干净的样本外。" : "final_test 尚未评测(盲测保留),本节只呈现 validation / shadow。";
+  if (F.refit_mode) desc += ` 交付重训口径 ${F.refit_mode}` + (F.es_holdout && F.es_holdout.first_pday ? `,早停面 ${F.es_holdout.first_pday} ~ ${F.es_holdout.last_pday}(${F.es_holdout.n_rows} 行)。` : "。");
+  $("d-final").textContent = desc;
+  const cell = o => o ? mets.map(m => fm(o[m], 4)).join(" / ") : "—";
+  let html = `<table><thead><tr><th>评估面(${mets.join(" / ")})</th><th>基线</th><th>冠军(train-only)</th><th>交付模型</th><th>交付/冠军 vs 基线</th></tr></thead><tbody>`;
+  F.faces.forEach(f => { const cand = f.delivery || f.search; let gcls = "", g = "—";
+    if (cand && f.baseline && fin(cand[MET]) && fin(f.baseline[MET])) { const v = HIB ? cand[MET] - f.baseline[MET] : f.baseline[MET] - cand[MET]; g = sg(v, 4); gcls = v > 0 ? "good" : "bad"; }
+    html += `<tr><td>${esc(f.label)}${f.split ? `<br><span style="color:#94a3b8;font-size:12px">${esc(f.split)}</span>` : ""}</td><td>${cell(f.baseline)}</td><td>${cell(f.search)}</td><td>${f.delivery ? cell(f.delivery) : esc(f.delivery_note || "—")}</td><td class="${gcls}">${g}</td></tr>`; });
+  html += "</tbody></table>";
+  const sp = F.shadow_precheck;
+  if (sp && sp.available) html += `<p class="desc" style="margin:10px 0 0;font-size:13px">shadow 预检:交付模型 ${fm(sp.delivery_model)} vs 冠军 train-only ${fm(sp.search_model)},Δ CI [${sg((sp.delta_ci||[])[0],5)}, ${sg((sp.delta_ci||[])[1],5)}]${sp.worse_than_search_model ? " —— 交付模型显著更差" : ""}。基线保持 train-only,交付模型多用了 validation 期数据,对基线的样本外提升包含这部分贡献。</p>`;
+  $("c-final-table").innerHTML = html;
+  const ss = D.shadow_seg;
+  if (!ss) { $("w-cap").style.display = "none"; }
+  else {
+    const unit = ss.scale === "raw" ? "原值" : "标签";
+    $("t-cap").textContent = `捕获曲线(shadow · ${unit}口径)`;
+    const svg = $("c-cap"), L = 50, R = 14, Tp = 16, B = 42, W = 520 - L - R, H = 330 - Tp - B, x = lin(0, 100, L, L + W), y = lin(0, 1, Tp + H, Tp);
+    [0, .2, .4, .6, .8, 1].forEach(v => { el("line", {x1:L, x2:L + W, y1:y(v), y2:y(v), stroke:"#eef2f7"}, svg); tx(svg, L - 7, y(v) + 4, Math.round(v * 100) + "%", {"text-anchor":"end", "font-size":10.5, fill:"#94a3b8"}); });
+    [0, 20, 40, 60, 80, 100].forEach(v => tx(svg, x(v), Tp + H + 16, v + "%", {"text-anchor":"middle", "font-size":10.5, fill:"#94a3b8"}));
+    el("line", {x1:x(0), y1:y(0), x2:x(100), y2:y(1), stroke:"#cbd5e1", "stroke-dasharray":"4 4"}, svg);
+    const line = (a, col, w) => el("polyline", {points:[[0,0]].concat(a.map((v, i) => [(i + 1) * 100 / a.length, v])).map(q => x(q[0]) + "," + y(q[1])).join(" "), fill:"none", stroke:col, "stroke-width":w}, svg);
+    line(ss.base.cum, "#64748b", 2); line(ss.deliv.cum, "#f59e0b", 3);
+    ss.deliv.cum.forEach((v, i) => { const b = ss.base.cum[i], k = (i + 1) * 100 / ss.deliv.cum.length;
+      tipOn(el("circle", {cx:x(k), cy:y(v), r:4.3, fill:"#f59e0b", stroke:"#fff", "stroke-width":1.4}, svg),
+        `<b>前 ${k}% 人群</b><br>交付 ${(v*100).toFixed(1)}% · 基线 ${(b*100).toFixed(1)}%<br>差 ${sg((v - b) * 100, 1)} pt`); });
+    tx(svg, L + 6, Tp + 12, `前 1%/5%/10%:${["1%","5%","10%"].map(k => (ss.deliv.top[k]*100).toFixed(1)).join("/")}% vs ${["1%","5%","10%"].map(k => (ss.base.top[k]*100).toFixed(1)).join("/")}%`, {"font-size":11, fill:"#b45309"});
+  }
+  // 十分位:优先 shadow 交付 vs 基线;否则 final_test gate 内 bin_means(仅交付)
+  const svg2 = $("c-dec"), lg = $("l-dec");
+  let A = null, B2 = null, title = "";
+  if (ss) { A = ss.deliv.mean; B2 = ss.base.mean; title = `十分位真实均值(shadow · ${ss.scale === "raw" ? "原值" : "标签"}口径)`;
+    lg.innerHTML = `<span><i style="background:var(--gold)"></i>交付模型</span><span><i style="background:#94a3b8"></i>基线</span>`; }
+  else if (F.final_bin_means && F.final_bin_means.length) { A = F.final_bin_means.slice().reverse(); title = "十分位标签均值(final_test · gate 内计算)";
+    lg.innerHTML = `<span><i style="background:var(--gold)"></i>交付模型</span>`; }
+  if (!A) { $("w-dec").style.display = "none"; }
+  else {
+    $("t-dec").textContent = title;
+    const L = 58, R = 10, Tp = 16, Bt = 42, W = 520 - L - R, H = 330 - Tp - Bt, n = A.length, bw = W / n;
+    const mx = Math.max(...A, ...(B2 || [0])), y = lin(0, mx * 1.08, Tp + H, Tp);
+    niceTicks(0, mx * 1.08, 5).forEach(v => { el("line", {x1:L, x2:L + W, y1:y(v), y2:y(v), stroke:"#eef2f7"}, svg2); tx(svg2, L - 7, y(v) + 4, big(v), {"text-anchor":"end", "font-size":10.5, fill:"#94a3b8"}); });
+    for (let i = 0; i < n; i++) { const x0 = L + bw * i + bw * 0.12, w = B2 ? bw * 0.36 : bw * 0.7;
+      const ra = el("rect", {x:x0, y:y(A[i]), width:w, height:y(0) - y(A[i]), fill:"#f59e0b", rx:3}, svg2);
+      let html = `<b>第 ${i + 1} 桶</b><br>交付 ${big(A[i])}`;
+      if (B2) { el("rect", {x:x0 + w + 2, y:y(B2[i]), width:w, height:y(0) - y(B2[i]), fill:"#94a3b8", rx:3}, svg2); html += ` · 基线 ${big(B2[i])}`; }
+      if (ss) html += `<br>标签>0 占比:交付 ${(ss.deliv.pos_rate[i]*100).toFixed(1)}% / 基线 ${(ss.base.pos_rate[i]*100).toFixed(1)}%`;
+      tipOn(ra, html); tx(svg2, L + bw * i + bw / 2, Tp + H + 16, String(i + 1), {"text-anchor":"middle", "font-size":11, fill:"#64748b"}); }
+    tx(svg2, L + W / 2, Tp + H + 34, "十分位桶(1 = 预测最高)", {"text-anchor":"middle", "font-size":11, fill:"#64748b"});
+  }
+  if ($("w-cap").style.display === "none" && $("w-dec").style.display === "none") $("c-final-charts").style.display = "none";
+  (D.notes || []).forEach(n => h("div", "note", esc(n), $("c-notes")));
+})();
+
+/* ---------- ⑦ 过程 ---------- */
+(function process(){
+  const G = D.generations || [];
+  if (!G.length) { hide("s-process"); return; }
+  const svg = $("c-gen"), L = 60, R = 74, Tp = 26, B = 40, W = 1000 - L - R, H = 300 - Tp - B, bw = W / G.length;
+  const hasWall = G.some(g => fin(g.wall_min)), mxw = Math.max(10, ...G.map(g => g.wall_min || 0));
+  const ym = lin(0, mxw * 1.15, Tp + H, Tp), bs = G.map(g => g.best).filter(fin), blo = Math.min(...bs), bhi = Math.max(...bs), bp = (bhi - blo) * 0.1 || 0.001;
+  const yr = HIB ? lin(blo - bp, bhi + bp, Tp + H, Tp) : lin(bhi + bp, blo - bp, Tp + H, Tp);
+  if (hasWall) niceTicks(0, mxw * 1.15, 4).forEach(v => { el("line", {x1:L, x2:L + W, y1:ym(v), y2:ym(v), stroke:"#eef2f7"}, svg); tx(svg, L - 7, ym(v) + 4, v + "′", {"text-anchor":"end", "font-size":10.5, fill:"#94a3b8"}); });
+  niceTicks(blo - bp, bhi + bp, 5).forEach(v => tx(svg, L + W + 7, yr(v) + 4, v.toFixed(4), {"font-size":10.5, fill:"#b45309"}));
+  tx(svg, L + W + 7, Tp - 10, `最佳 ${MET}`, {"font-size":11, fill:"#b45309"});
+  const firstModel = (D.steps || []).find(s => s.category === "model");
+  const pts = [];
+  G.forEach((g, i) => { const cx = L + bw * i + bw / 2, w = bw * 0.56;
+    const ph = firstModel && g.g >= firstModel.g ? "#c4b5fd" : (g.g === 0 ? "#cbd5e1" : "#5eead4");
+    if (hasWall && fin(g.wall_min)) { const r = el("rect", {x:cx - w / 2, y:ym(g.wall_min), width:w, height:ym(0) - ym(g.wall_min), fill:ph, rx:4}, svg);
+      tx(svg, cx, ym(g.wall_min) - 5, `${Math.round(g.wall_min)}′·${g.n_trials}`, {"text-anchor":"middle", "font-size":10.5, fill:"#475569"});
+      tipOn(r, `<b>gen-${String(g.g).padStart(2,"0")}</b><br>墙钟 ${g.wall_min} 分钟 · ${g.n_trials} 个 trial<br>截至本代最佳 ${MET} ${fm(g.best,5)}`); }
+    tx(svg, cx, Tp + H + 18, "gen-" + String(g.g).padStart(2,"0"), {"text-anchor":"middle", "font-size":11, fill:"#64748b"});
+    if (fin(g.best)) pts.push([cx, yr(g.best)]); });
+  el("polyline", {points:pts.map(p => p.join(",")).join(" "), fill:"none", stroke:"#f59e0b", "stroke-width":3}, svg);
+  pts.forEach(p => el("circle", {cx:p[0], cy:p[1], r:4.3, fill:"#f59e0b", stroke:"#fff", "stroke-width":1.4}, svg));
+  const P = D.phase_share || [];
+  if (!P.length) { $("w-donut").style.display = "none"; return; }
+  $("t-donut").textContent = `计算时间都花在哪` + (fin(D.trial_hours) ? `(合计 ${D.trial_hours.toFixed(1)} 计算小时)` : "");
+  const sv = $("c-donut"), cx = 150, cy = 150, r1 = 112, r0 = 68, cols = ["#7c3aed","#0ea5a4","#f59e0b","#94a3b8","#a78bfa","#64748b","#cbd5e1","#2563eb"];
+  let a = -Math.PI / 2; const tot = P.reduce((s, p) => s + p[1], 0) || 1;
+  P.forEach(([n, v], i) => { const f = v / tot, a2 = a + f * Math.PI * 2, lg2 = f > 0.5 ? 1 : 0, pt = (r, t) => [cx + r * Math.cos(t), cy + r * Math.sin(t)];
+    const [x1, y1] = pt(r1, a), [x2, y2] = pt(r1, a2), [x3, y3] = pt(r0, a2), [x4, y4] = pt(r0, a);
+    tipOn(el("path", {d:`M${x1},${y1} A${r1},${r1} 0 ${lg2} 1 ${x2},${y2} L${x3},${y3} A${r0},${r0} 0 ${lg2} 0 ${x4},${y4} Z`, fill:cols[i % cols.length], stroke:"#fff", "stroke-width":2}, sv),
+      `<b>${esc(n)}</b> ${(f * 100).toFixed(1)}%` + (fin(D.trial_hours) ? ` · 约 ${(f * D.trial_hours).toFixed(2)} h` : ""));
+    el("rect", {x:330, y:40 + i * 30, width:13, height:13, rx:3, fill:cols[i % cols.length]}, sv);
+    tx(sv, 352, 51 + i * 30, n, {"font-size":13, fill:"#334155"}); tx(sv, 620, 51 + i * 30, (f * 100).toFixed(1) + "%", {"font-size":13, fill:"#475569", "text-anchor":"end", "font-weight":600}); a = a2; });
+})();
+
+/* ---------- ⑧ 节点与裁决 / ⑨ 经验 ---------- */
+(function events(){
+  const E = D.events || [], DE = (D.decisions || []).slice().sort((a, b) => a.id.localeCompare(b.id, undefined, {numeric:true}));
+  if (!E.length && !DE.length) { hide("s-events"); return; }
+  E.forEach(e => h("div", "ev " + e.kind, `<div class="t">${esc(e.title)}</div><div>${esc(e.text)}</div>`, $("c-events")));
+  if (!E.length) h("div", "desc", "(无)", $("c-events"));
+  DE.forEach(d => h("div", "ev user", `<div class="t">${esc(d.id)} · ${esc(d.status)}</div><div>${esc(d.title)}</div>`, $("c-decisions")));
+  if (!DE.length) h("div", "desc", "(本 run 未登记用户裁决)", $("c-decisions"));
+})();
+(function insights(){
+  const I = D.insights || [];
+  if (!I.length) { hide("s-insights"); return; }
+  I.forEach(i => h("div", "ins", `<h4>${esc(i.title || "")}</h4><p>${esc(i.text || "")}</p>`, $("c-ins")));
+})();
+
+/* ---------- 页脚 / scrollspy ---------- */
+(function foot(){
+  const w = (D.warnings || []).length ? `<div class="note warn">部分分项降级:${(D.warnings).map(esc).join(";")}</div>` : "";
+  $("foot").innerHTML = w + `数据来源:${(D.sources || []).slice(0, 12).map(esc).join(" · ")}${(D.sources||[]).length > 12 ? " …" : ""}<br>由 ModelEvo ${esc(M.skill_version || "")} 的 <code>report</code> 命令生成于 ${esc(M.generated_at || "")};说明文字${(D.sources||[]).some(s => /narrative/.test(s)) ? "来自 report/journey-narrative.yaml" : "自动取自 trial 假设与经验卡"}。`;
+})();
+(function spy(){
+  const links = Array.from(document.querySelectorAll("#toc-nav a")), map = new Map();
+  links.forEach(a => { const t = document.getElementById(a.getAttribute("href").slice(1)); if (t) map.set(t, a); });
+  if (!("IntersectionObserver" in window)) return;
+  const ob = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { const a = map.get(e.target);
+    if (!a) return; links.forEach(l => { if (!l.classList.contains("sub") || a.classList.contains("sub")) l.classList.remove("active"); });
+    if (a.classList.contains("sub")) { links.forEach(l => l.classList.contains("sub") && l.classList.remove("active")); }
+    a.classList.add("active"); } }), {rootMargin:"0px 0px -70% 0px"});
+  map.forEach((a, t) => ob.observe(t));
+})();
+</script>
+</body>
+</html>

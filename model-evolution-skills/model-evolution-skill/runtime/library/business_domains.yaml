@@ -1,0 +1,74 @@
+# v2.18.2 业务域受控词表(dev 文档 §22)
+#
+# task-spec 的 business_domains 与原则 condition.business_domains 都按本表归一:
+# 写代码、别名或中文名均可(大小写、空格、连字符不敏感)。任务相似度按层级比较:
+# 同一个词 1.0;祖先 / 后代 0.7;同一父节点下的兄弟 0.5;其余 0。
+# 不在表里的写法原样保留、只做精确比较 —— `library domains` 会列出它们,
+# 确认是新业务就在这里加词,是已有业务的另一种写法就加进 aliases。
+#
+# 词的 code 用点号表示层级(最多两层),顶层是业务大类。
+version: 1
+domains:
+  credit:
+    label: 信贷
+    aliases: [consumer_credit, consumer_finance, consumer_lending, lending_business, 消费信贷]
+  credit.acquisition:
+    label: 授信申请 / 获客
+    aliases: [credit_application, loan_application, application, acquisition, 授信, 进件]
+  credit.risk:
+    label: 信用风险
+    aliases: [credit_risk, risk, risk_control, default_risk, 风控]
+  credit.drawdown:
+    label: 支用
+    aliases: [loan_drawdown, credit_drawdown, drawdown, withdrawal, loan_usage, 提现, 提款, 动支]
+  credit.loan:
+    label: 借款 / 借贷金额
+    aliases: [credit_loan, loan, lending, loan_amount, 借贷]
+  credit.limit:
+    label: 额度管理
+    aliases: [credit_limit, limit_management, credit_line, 提额]
+  credit.collection:
+    label: 贷后催收
+    aliases: [collection, collections, debt_collection, 催收]
+  fraud:
+    label: 反欺诈
+    aliases: [anti_fraud, antifraud, fraud_detection]
+  user_operation:
+    label: 用户运营
+    aliases: [user_ops, user_operations, operation, operations, user_growth, growth]
+  user_operation.activation:
+    label: 拉新 / 激活
+    aliases: [activation, user_activation, acquisition_growth, 拉新]
+  user_operation.retention:
+    label: 留存 / 流失
+    aliases: [retention, churn, churn_prediction, 流失]
+  user_operation.engagement:
+    label: 活跃 / 请求
+    aliases: [engagement, activity, user_activity, 活跃]
+  marketing:
+    label: 营销
+    aliases: [promotion, campaign]
+  marketing.coupon:
+    label: 权益 / 优惠券
+    aliases: [coupon, incentive, rights, 权益]
+  marketing.uplift:
+    label: 增益营销
+    aliases: [uplift_marketing, treatment_effect]
+  marketing.response:
+    label: 营销响应
+    aliases: [response, campaign_response, 响应]
+  advertising:
+    label: 广告
+    aliases: [ads, ad, ctr, cvr]
+  recommendation:
+    label: 推荐
+    aliases: [recsys, recommender]
+  ecommerce:
+    label: 电商
+    aliases: [e_commerce, retail]
+  insurance:
+    label: 保险
+    aliases: []
+  payment:
+    label: 支付
+    aliases: [payments]

@@ -1,0 +1,178 @@
+# v2.19.0 ModelEvo benchmark 套件(路线图 §6.3 #1/#3)
+#
+# 按"形态"而不是"领域"挑数据:小样本、高基数类别、宽表、强漂移/带时间列、
+# 类别不平衡、回归各至少 1 个。数据源均为 OpenML(2026-11-01 经 API 核对
+# data id / target / 行列数;n_features 含目标列,为 OpenML NumberOfFeatures)。
+#
+# 切分口径(固定、可复现,写进每个 run 的 task-spec.yaml):
+# - split: time —— 有真实时间列:按时间窗口切 train/validation/shadow/final;
+# - split: stratified —— 无时间列:按标签分层随机切分(seed 固定),比例
+#   0.6/0.15/0.1/0.15。框架原生 random split 不分层,所以 prepare 在 loader 里
+#   按分层结果生成伪时间列 bench_split_date(2000-01/02/03/04 四个月份 = 四个
+#   split),spec 用 time_based 窗口精确复现该分层切分。该列只承载切分归属,
+#   作为 time.column 被排除在特征面外。
+# - 回归分层:按目标分位数 10 桶分层。
+#
+# 档位:fast = 3 个小数据(单任务 ≤1h,只跑 baseline + gen-01 + gen-02);
+#       full = fast + 4 个(每周一次)。
+# 预算:budget 段是 run_agent.py 的默认值;ceiling 预算见 ceiling_budget_minutes。
+
+suite_id: modelevo-bench-v1
+version: 1
+seed: 20261101
+ratios: {train: 0.6, validation: 0.15, shadow_test: 0.1, final_test: 0.15}
+ceiling_budget_minutes: 15
+mde_default: {auc: 0.002, rmse_rel: 0.005}
+budget:
+  fast: {max_generations: 3, max_trials: 10, wall_hours: 1.0}
+  full: {max_generations: 6, max_trials: 24, wall_hours: 4.0}
+  # v2.19.0:large = 贴近真实业务的大样本 / 多表事件历史(每月一次)
+  large: {max_generations: 8, max_trials: 30, wall_hours: 10.0,
+          trial_timeout_minutes: 120}
+
+datasets:
+  # ---------------- fast ----------------
+  - name: credit_g
+    tiers: [fast, full]
+    openml_id: 31
+    shape_tags: [small_sample, categorical]
+    n_rows: 1000
+    n_features: 21
+    target: class
+    model_type: binary_classification
+    positive_class: bad          # 少数类 30%
+    primary_metric: auc
+    split: stratified
+    business_domains: [credit]
+
+  - name: adult
+    tiers: [fast, full]
+    openml_id: 1590
+    shape_tags: [medium, categorical, missing_values]
+    n_rows: 48842
+    n_features: 15
+    target: class
+    model_type: binary_classification
+    positive_class: ">50K"       # 23.9%
+    primary_metric: auc
+    split: stratified
+    business_domains: [user_operation]
+
+  - name: bike_sharing
+    tiers: [fast, full]
+    openml_id: 42712
+    shape_tags: [regression, time_column, strong_drift]
+    n_rows: 17379
+    n_features: 13
+    target: count
+    model_type: regression
+    primary_metric: rmse
+    # casual + registered == count(目标的加和分量,泄漏),loader 直接丢弃
+    drop_columns: [casual, registered]
+    # 无日期列:由 year(0=2011,1=2012)+ month 合成月粒度时间列 bench_month;
+    # 2012 年需求整体上升 → 强漂移
+    derive_time: {column: bench_month, from: year_month, year_base: 2011}
+    split: time
+    time_windows:
+      train: 2011-01~2012-06
+      validation: 2012-07~2012-08
+      shadow_test: 2012-09~2012-10
+      final_test: 2012-11~2012-12
+    business_domains: [user_operation]
+
+  # ---------------- full 追加 ----------------
+  - name: amazon_employee_access
+    tiers: [full]
+    openml_id: 4135
+    shape_tags: [high_cardinality, imbalanced]
+    n_rows: 32769
+    n_features: 10
+    target: target
+    model_type: binary_classification
+    positive_class: "0"          # 少数类(拒绝访问)5.8%
+    primary_metric: auc
+    split: stratified
+    business_domains: [user_operation]
+
+  - name: bioresponse
+    tiers: [full]
+    openml_id: 4134
+    shape_tags: [wide, small_sample]
+    n_rows: 3751
+    n_features: 1777
+    target: target
+    model_type: binary_classification
+    positive_class: "1"
+    primary_metric: auc
+    split: stratified
+    business_domains: [user_operation]
+
+  - name: creditcard
+    tiers: [full]
+    openml_id: 1597
+    shape_tags: [imbalanced, medium]
+    n_rows: 284807
+    n_features: 31
+    target: Class
+    model_type: binary_classification
+    positive_class: "1"          # 0.17%
+    primary_metric: auc
+    # Time 是相对秒数且只覆盖 2 天,不足以做日粒度时间切分 → 分层随机
+    split: stratified
+    business_domains: [fraud]
+
+  - name: house_sales
+    tiers: [full]
+    openml_id: 42092
+    shape_tags: [regression, time_column]
+    n_rows: 21613
+    n_features: 21
+    target: price
+    model_type: regression
+    primary_metric: rmse
+    # 目标取 log1p(price)(派生列声明进 data.derived_columns,原始 price 丢弃);
+    # id 为房屋编号,同一房屋多次成交 → 作为 entity 列,不进特征
+    target_transform: log1p
+    id_column: id
+    derive_time: {column: sale_date, from: date_string}
+    split: time
+    time_windows:
+      train: 2014-05~2014-12
+      validation: 2015-01~2015-02
+      shadow_test: 2015-03
+      final_test: 2015-04~2015-05
+    business_domains: [ecommerce]
+
+  # ---------------- large ----------------
+  # v2.19.0:Home Credit Default Risk(Kaggle 公开赛,信贷违约)。数据来自 HDFS
+  # /user/liwei16-jk/dataset/开源home-credit-default-risk,7 张表经
+  # scripts/benchmark/build_home_credit.py 拼成单表:主表 120 列原样 + 5 个历史
+  # 明细序列串列(征信/历史申请/POS/分期还款/信用卡,按时间升序逐条序列化,
+  # 不做任何聚合),与 req-t7 的 seq_d365 同形态 —— 检验框架从原始事件历史里
+  # 挖特征的能力。无申请日期 → 分层随机切分。
+  - name: home_credit
+    tiers: [large]
+    source: local
+    source_desc: "Kaggle home-credit-default-risk(HDFS 副本)"
+    builder: "scripts/benchmark/build_home_credit.py --raw-dir <hdfs 拷贝目录> --out-dir <datasets-root>/home_credit"
+    shape_tags: [large, relational_history, event_sequence, imbalanced, credit]
+    n_rows: 307511
+    target: TARGET
+    model_type: binary_classification
+    positive_class: 1
+    primary_metric: auc
+    id_column: SK_ID_CURR
+    split: stratified
+    business_domains: [credit_risk]
+    description: >-
+      预测申请人是否违约(TARGET=1,约 8%)。主表为申请时点信息;hist_* 五列是该申请人
+      在申请前的历史明细序列(字段顺序见 run 目录 DATA_DICTIONARY.md)。
+    # 公开结果锚点:Kaggle 私榜(测试集、另一切分),只看量级,不与本切分直接比
+    published_reference:
+      metric: auc
+      notes: >-
+        Kaggle 私榜第 1 名约 0.806(多表特征工程 + 大规模集成);仅用主表的
+        单模型 GBDT 一般约 0.76~0.77;做了多表聚合特征的单个 LightGBM 一般
+        约 0.79~0.80。数字为公开讨论中的量级,口径(测试集、提交切分)与本
+        benchmark 不同,只用于判断参照是否明显偏低。
+

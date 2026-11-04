@@ -1,0 +1,25 @@
+suite_id: modelevo-release-suite
+protocol:
+  note: reference_score、MDE 与预算必须在独立测试集揭盲前预先登记
+  fixed_compute_budget: true
+tasks:
+  - task_id: example-binary
+    model_type: binary_classification
+    direction: maximize
+    baseline_score: 0.70
+    achieved_score: 0.79
+    reference_score: 0.80
+    compute_hours: 2.0
+    reference_compute_hours: 2.0
+    compute_budget_hours: 2.0
+    mde: 0.01
+    search_seeds: 3
+    delivered: true
+    reproducible: true
+    reference_preregistered: true
+    independent_test: true
+    leakage_detected: false
+    invalid_champion: false
+    final_test_touches: 1
+# 发布门默认要求至少 6 个唯一任务、覆盖至少 3 种模型类型；请复制任务
+# 块并替换为真实、等预算的分类/回归/uplift 结果。单行模板预期不通过。

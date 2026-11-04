@@ -1,0 +1,10 @@
+# v2.18.0 经验库服务依赖(runtime 本身不需要这些包)
+fastapi>=0.110
+uvicorn>=0.29
+sqlalchemy>=2.0
+alembic>=1.12
+fsspec>=2023.1
+pyyaml>=6.0
+# 按后端另装:
+#   PostgreSQL:            psycopg[binary]>=3.1
+#   S3 兼容对象存储(MinIO):s3fs>=2023.1

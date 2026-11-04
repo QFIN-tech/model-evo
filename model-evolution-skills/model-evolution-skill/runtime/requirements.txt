@@ -1,0 +1,15 @@
+# ModelEvo V2.7 — Runtime 依赖
+# Immutable Harness 运行所需;与 Skill 文档共同构成不可变部分
+pandas>=1.5
+numpy>=1.23
+pyarrow>=10.0
+scikit-learn>=1.1
+scipy>=1.9
+lightgbm>=3.3
+xgboost>=1.7
+pyyaml>=6.0
+psutil>=5.9
+pynvml>=11.0  # GPU 探测(scheduler 资源快照/trial pick_gpu);v19:与 nvidia-ml-py 同名冲突时后者优先,探测失败有 nvidia-smi 文本解析回退
+nvidia-ml-py>=12.5  # v19:pynvml 已弃用,继任包(同 import 名 pynvml);两者共存时本包提供新 API,弃用警告被 scheduler 显式抑制
+joblib>=1.2
+openpyxl>=3.1  # 分桶报表 xlsx 输出;缺失时自动降级 csv
